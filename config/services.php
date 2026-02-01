@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'google_script' => [
+        'token' => env('GOOGLE_SCRIPT_TOKEN'),
+    ],
+
 ];

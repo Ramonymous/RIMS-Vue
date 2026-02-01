@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserHasAdminPermission::class,
+            'google.script' => \App\Http\Middleware\EnsureGoogleScriptToken::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -19,6 +19,8 @@ const STORAGE_KEY = 'rims_announced_items';
 const MAX_ANNOUNCED_HISTORY = 1000; // Prevent localStorage bloat
 const MAX_SPELLED_CACHE = 100; // Limit spelling cache size
 
+let currentSpeech: SpeechSynthesisUtterance | null = null;
+
 // Shared state across all instances
 const state = ref<AnnouncementState>({
     announcedIds: new Set<string>(),
@@ -74,6 +76,11 @@ function speak(
     options: { urgent?: boolean; onEnd?: () => void } = {},
 ): Promise<void> {
     return new Promise((resolve, reject) => {
+        if (!('speechSynthesis' in window)) {
+            resolve();
+            return;
+        }
+
         if (!state.value.permissionGranted) {
             resolve();
             return;
@@ -249,6 +256,7 @@ function clearHistory(): void {
  * Stop current speech
  */
 function stopSpeaking(): void {
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     currentSpeech = null;
 }

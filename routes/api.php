@@ -9,6 +9,6 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::get('/part-movements', [\App\Http\Controllers\Api\PartMovementsController::class, 'index'])
-    ->middleware('auth:sanctum');
+    ->middleware('google.script');
 
 Route::get('/pick-command', fn () => Cache::pull('pick_command', ''));
