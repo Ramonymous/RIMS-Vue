@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { BarChart3, Package, TrendingUp, TrendingDown, Filter, X, Download, FileSpreadsheet } from 'lucide-vue-next';
 import {
     FlexRender,
@@ -73,6 +73,11 @@ type Props = {
         last_page: number;
         per_page: number;
         total: number;
+        links: Array<{
+            url: string | null;
+            label: string;
+            active: boolean;
+        }>;
     };
     movements: {
         data: Movement[];
@@ -80,6 +85,11 @@ type Props = {
         last_page: number;
         per_page: number;
         total: number;
+        links: Array<{
+            url: string | null;
+            label: string;
+            active: boolean;
+        }>;
     };
 };
 
@@ -490,6 +500,27 @@ function exportStock(stockLevel?: string) {
                                     ({{ selectedRowCount }} selected)
                                 </span>
                             </div>
+
+                            <!-- Pagination -->
+                            <div
+                                v-if="props.parts.last_page > 1"
+                                class="mt-4 flex flex-wrap justify-center gap-2"
+                            >
+                                <Link
+                                    v-for="link in props.parts.links"
+                                    :key="link.label"
+                                    :href="link.url || '#'"
+                                    :class="[
+                                        'rounded-md px-4 py-2 text-sm font-medium transition-all',
+                                        link.active
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground',
+                                        !link.url && 'cursor-not-allowed opacity-50',
+                                    ]"
+                                    :disabled="!link.url"
+                                    v-html="link.label"
+                                />
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -601,6 +632,27 @@ function exportStock(stockLevel?: string) {
 
                             <div class="text-sm text-muted-foreground">
                                 Showing {{ filteredMovements.length }} of {{ props.movements.data.length }} movements
+                            </div>
+
+                            <!-- Pagination -->
+                            <div
+                                v-if="props.movements.last_page > 1"
+                                class="mt-4 flex flex-wrap justify-center gap-2"
+                            >
+                                <Link
+                                    v-for="link in props.movements.links"
+                                    :key="link.label"
+                                    :href="link.url || '#'"
+                                    :class="[
+                                        'rounded-md px-4 py-2 text-sm font-medium transition-all',
+                                        link.active
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground',
+                                        !link.url && 'cursor-not-allowed opacity-50',
+                                    ]"
+                                    :disabled="!link.url"
+                                    v-html="link.label"
+                                />
                             </div>
                         </CardContent>
                     </Card>

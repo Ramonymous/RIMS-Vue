@@ -56,7 +56,6 @@ class StockController extends Controller
         return Inertia::render('stock/Index', [
             'parts' => $parts,
             'movements' => $movements,
-            'userPermissions' => $user->permissions ?? [],
         ]);
     }
 
