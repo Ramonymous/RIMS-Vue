@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -10,9 +11,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import type { Part } from '@/composables/useParts';
 import { useFormState } from '@/composables/useFormState';
+import type { Part } from '@/composables/useParts';
 
 interface Props {
     open: boolean;
@@ -28,7 +28,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 // Form state with dirty tracking
-const { form, isDirty, submit } = useFormState(
+const { form, submit } = useFormState(
     {
         part_number: props.part?.part_number || '',
         part_name: props.part?.part_name || '',
@@ -46,24 +46,8 @@ const { form, isDirty, submit } = useFormState(
             emit('update:open', false);
             emit('success');
         },
-    }
+    },
 );
-
-// Update form when part changes
-const updateFormData = () => {
-    if (props.part) {
-        form.part_number = props.part.part_number;
-        form.part_name = props.part.part_name;
-        form.customer_code = props.part.customer_code || '';
-        form.supplier_code = props.part.supplier_code || '';
-        form.model = props.part.model || '';
-        form.variant = props.part.variant || '';
-        form.standard_packing = props.part.standard_packing;
-        form.stock = props.part.stock;
-        form.address = props.part.address || '';
-        form.is_active = props.part.is_active;
-    }
-};
 
 const handleSubmit = () => {
     const url = props.part ? `/parts/${props.part.id}` : '/parts';
@@ -74,18 +58,24 @@ const handleSubmit = () => {
 
 <template>
     <Dialog :open="open" @update:open="(val) => emit('update:open', val)">
-        <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent class="max-h-[90vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
-                <DialogTitle>{{ part ? 'Edit Part' : 'Create New Part' }}</DialogTitle>
+                <DialogTitle>{{
+                    part ? 'Edit Part' : 'Create New Part'
+                }}</DialogTitle>
                 <DialogDescription>
-                    {{ part ? 'Update part information' : 'Add a new part to the inventory' }}
+                    {{
+                        part
+                            ? 'Update part information'
+                            : 'Add a new part to the inventory'
+                    }}
                 </DialogDescription>
             </DialogHeader>
 
             <form @submit.prevent="handleSubmit">
                 <div class="grid gap-4 py-4">
                     <!-- Part Number & Name -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="part-number">
                                 Part Number
@@ -97,7 +87,10 @@ const handleSubmit = () => {
                                 placeholder="PN-001"
                                 required
                             />
-                            <span v-if="form.errors.part_number" class="text-sm text-destructive">
+                            <span
+                                v-if="form.errors.part_number"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.part_number }}
                             </span>
                         </div>
@@ -112,14 +105,17 @@ const handleSubmit = () => {
                                 placeholder="Widget Assembly"
                                 required
                             />
-                            <span v-if="form.errors.part_name" class="text-sm text-destructive">
+                            <span
+                                v-if="form.errors.part_name"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.part_name }}
                             </span>
                         </div>
                     </div>
 
                     <!-- Customer & Supplier Code -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="customer-code">Customer Code</Label>
                             <Input
@@ -139,19 +135,27 @@ const handleSubmit = () => {
                     </div>
 
                     <!-- Model & Variant -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="model">Model</Label>
-                            <Input id="model" v-model="form.model" placeholder="Model X" />
+                            <Input
+                                id="model"
+                                v-model="form.model"
+                                placeholder="Model X"
+                            />
                         </div>
                         <div class="grid gap-2">
                             <Label for="variant">Variant</Label>
-                            <Input id="variant" v-model="form.variant" placeholder="V1" />
+                            <Input
+                                id="variant"
+                                v-model="form.variant"
+                                placeholder="V1"
+                            />
                         </div>
                     </div>
 
                     <!-- Packing, Stock, Address -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div class="grid gap-2">
                             <Label for="standard-packing">
                                 Standard Packing
@@ -183,20 +187,34 @@ const handleSubmit = () => {
                                 min="0"
                                 required
                             />
-                            <span v-if="form.errors.stock" class="text-sm text-destructive">
+                            <span
+                                v-if="form.errors.stock"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.stock }}
                             </span>
                         </div>
                         <div class="grid gap-2">
                             <Label for="address">Address</Label>
-                            <Input id="address" v-model="form.address" placeholder="A1-B2-C3" />
+                            <Input
+                                id="address"
+                                v-model="form.address"
+                                placeholder="A1-B2-C3"
+                            />
                         </div>
                     </div>
 
                     <!-- Active Status -->
                     <div class="flex items-center space-x-2">
-                        <Checkbox id="is-active" v-model:checked="form.is_active" />
-                        <Label for="is-active" class="cursor-pointer font-normal">Active</Label>
+                        <Checkbox
+                            id="is-active"
+                            v-model:checked="form.is_active"
+                        />
+                        <Label
+                            for="is-active"
+                            class="cursor-pointer font-normal"
+                            >Active</Label
+                        >
                     </div>
                 </div>
 
@@ -209,7 +227,13 @@ const handleSubmit = () => {
                         Cancel
                     </Button>
                     <Button type="submit" :disabled="form.processing">
-                        {{ form.processing ? 'Saving...' : part ? 'Update Part' : 'Create Part' }}
+                        {{
+                            form.processing
+                                ? 'Saving...'
+                                : part
+                                  ? 'Update Part'
+                                  : 'Create Part'
+                        }}
                     </Button>
                 </DialogFooter>
             </form>

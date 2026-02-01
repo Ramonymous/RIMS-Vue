@@ -1,5 +1,5 @@
-import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 /**
  * User Store - Global authentication and permissions state
@@ -11,65 +11,69 @@ export function useUserStore() {
 
     // Computed user data from Inertia page props
     const user = computed(() => page.props.auth?.user || null);
-    const permissions = computed(() => (page.props.auth?.permissions as string[]) || []);
+    const permissions = computed(
+        () => (page.props.auth?.permissions as string[]) || [],
+    );
     const role = computed(() => page.props.auth?.role as string | null);
     const isAuthenticated = computed(() => !!user.value);
 
     // Permission checkers
     const hasPermission = (permission: string | string[]): boolean => {
         const perms = Array.isArray(permission) ? permission : [permission];
-        return perms.some(p => permissions.value.includes(p));
+        return perms.some((p) => permissions.value.includes(p));
     };
 
     const hasAllPermissions = (perms: string[]): boolean => {
-        return perms.every(p => permissions.value.includes(p));
+        return perms.every((p) => permissions.value.includes(p));
     };
 
     // Common permission checks matching useAuth composable
     const isAdmin = computed(() => hasPermission('admin'));
-    
-    const canManageParts = computed(() => 
-        hasPermission(['admin', 'manager'])
-    );
-    
-    const canViewReceivings = computed(() => 
-        hasPermission(['admin', 'receiving', 'manager', 'part_gr'])
+
+    const canManageParts = computed(() => hasPermission(['admin', 'manager']));
+
+    const canViewReceivings = computed(() =>
+        hasPermission(['admin', 'receiving', 'manager', 'part_gr']),
     );
 
-    const canManageReceivings = computed(() => 
-        hasPermission(['admin', 'receiving', 'manager'])
-    );
-    
-    const canViewOutgoings = computed(() => 
-        hasPermission(['admin', 'outgoing', 'manager', 'part_gi'])
+    const canManageReceivings = computed(() =>
+        hasPermission(['admin', 'receiving', 'manager']),
     );
 
-    const canManageOutgoings = computed(() => 
-        hasPermission(['admin', 'outgoing', 'manager'])
+    const canViewOutgoings = computed(() =>
+        hasPermission(['admin', 'outgoing', 'manager', 'part_gi']),
     );
-    
-    const canManageRequests = computed(() => 
-        hasPermission(['admin', 'manager', 'receiving'])
+
+    const canManageOutgoings = computed(() =>
+        hasPermission(['admin', 'outgoing', 'manager']),
+    );
+
+    const canManageRequests = computed(() =>
+        hasPermission(['admin', 'manager', 'receiving']),
     );
 
     const canSupplyRequests = computed(() =>
-        hasPermission(['admin', 'outgoing'])
+        hasPermission(['admin', 'outgoing']),
     );
 
     const canConfirmGR = computed(() =>
-        hasPermission(['admin', 'manager', 'part_gr'])
+        hasPermission(['admin', 'manager', 'part_gr']),
     );
 
     const canConfirmGI = computed(() =>
-        hasPermission(['admin', 'manager', 'part_gi'])
+        hasPermission(['admin', 'manager', 'part_gi']),
     );
 
-    const hasReceivingOnly = computed(() => 
-        hasPermission('receiving') && !hasPermission(['admin', 'outgoing', 'manager'])
+    const hasReceivingOnly = computed(
+        () =>
+            hasPermission('receiving') &&
+            !hasPermission(['admin', 'outgoing', 'manager']),
     );
 
-    const hasOutgoingOnly = computed(() => 
-        hasPermission('outgoing') && !hasPermission(['admin', 'receiving', 'manager'])
+    const hasOutgoingOnly = computed(
+        () =>
+            hasPermission('outgoing') &&
+            !hasPermission(['admin', 'receiving', 'manager']),
     );
 
     return {
@@ -78,11 +82,11 @@ export function useUserStore() {
         permissions,
         role,
         isAuthenticated,
-        
+
         // Methods
         hasPermission,
         hasAllPermissions,
-        
+
         // Common permissions
         isAdmin,
         canManageParts,

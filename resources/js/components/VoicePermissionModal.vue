@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { Volume2 } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -9,7 +9,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 
 interface Props {
     open: boolean;
@@ -42,29 +41,44 @@ function handleDismiss() {
                     Enable Voice Announcements
                 </DialogTitle>
                 <DialogDescription>
-                    Allow voice announcements for new part requests. This will help you stay informed about urgent
-                    and normal requests without constantly checking the screen.
+                    Allow voice announcements for new part requests. This will
+                    help you stay informed about urgent and normal requests
+                    without constantly checking the screen.
                 </DialogDescription>
             </DialogHeader>
 
             <div class="space-y-3 py-4">
                 <div class="flex items-start gap-3">
-                    <div class="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
-                        <span class="text-sm font-semibold text-red-600 dark:text-red-400">!</span>
+                    <div
+                        class="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20"
+                    >
+                        <span
+                            class="text-sm font-semibold text-red-600 dark:text-red-400"
+                            >!</span
+                        >
                     </div>
                     <div>
                         <p class="font-medium">Urgent Requests</p>
-                        <p class="text-sm text-muted-foreground">Higher priority with faster speech</p>
+                        <p class="text-sm text-muted-foreground">
+                            Higher priority with faster speech
+                        </p>
                     </div>
                 </div>
 
                 <div class="flex items-start gap-3">
-                    <div class="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
-                        <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">i</span>
+                    <div
+                        class="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20"
+                    >
+                        <span
+                            class="text-sm font-semibold text-blue-600 dark:text-blue-400"
+                            >i</span
+                        >
                     </div>
                     <div>
                         <p class="font-medium">Normal Requests</p>
-                        <p class="text-sm text-muted-foreground">Standard announcements for new items</p>
+                        <p class="text-sm text-muted-foreground">
+                            Standard announcements for new items
+                        </p>
                     </div>
                 </div>
             </div>

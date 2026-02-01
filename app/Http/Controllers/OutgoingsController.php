@@ -9,6 +9,7 @@ use App\Models\Parts;
 use App\Services\AuthorizationService;
 use App\Services\OutgoingService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,9 +45,9 @@ class OutgoingsController extends Controller
         return sprintf('%s-%03d', $prefix, $nextNumber);
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $outgoings = Outgoings::query()
+        $query = Outgoings::query()
             ->with(['issuedBy:id,name', 'items.part:id,part_number,part_name,stock'])
             ->select([
                 'id',
@@ -56,13 +57,27 @@ class OutgoingsController extends Controller
                 'status',
                 'is_gi',
                 'created_at',
-            ])
+            ]);
+
+        // Server-side search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('doc_number', 'LIKE', "%{$search}%")
+                    ->orWhereHas('issuedBy', function ($q) use ($search) {
+                        $q->where('name', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        $outgoings = $query
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('outgoings/Index', [
             'outgoings' => $outgoings,
+            'filters' => $request->only(['search']),
         ]);
     }
 

@@ -14,7 +14,7 @@ export interface AsyncState<T> {
  */
 export function useAsyncState<T>(
     asyncFn: (...args: any[]) => Promise<T>,
-    initialData: T | null = null
+    initialData: T | null = null,
 ): AsyncState<T> {
     const data = ref<T | null>(initialData) as Ref<T | null>;
     const loading = ref(false);
@@ -29,7 +29,8 @@ export function useAsyncState<T>(
             data.value = result;
             return result;
         } catch (err) {
-            const errorMessage = err instanceof Error ? err : new Error(String(err));
+            const errorMessage =
+                err instanceof Error ? err : new Error(String(err));
             error.value = errorMessage;
             console.error('AsyncState error:', errorMessage);
             return null;

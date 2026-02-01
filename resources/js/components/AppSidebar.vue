@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, UsersRound, Package, PackageSearch, PackageMinus, BarChart3, FileInput } from 'lucide-vue-next';
+import {
+    LayoutGrid,
+    UsersRound,
+    Package,
+    PackageSearch,
+    PackageMinus,
+    BarChart3,
+    FileInput,
+} from 'lucide-vue-next';
+import { computed } from 'vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import {
@@ -12,21 +21,17 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/composables/useAuth';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
-import { computed } from 'vue';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/composables/useAuth';
 
-const {
-    isAdmin,
-    canManageParts,
-} = useAuth();
+const { isAdmin, canManageParts } = useAuth();
 
 const navGroups = computed(() => {
     const groups = [];
-    
+
     // Inventory section - Globally accessible (no permission checks)
     const inventoryItems: NavItem[] = [
         {
@@ -79,11 +84,13 @@ const navGroups = computed(() => {
     if (canManageParts.value) {
         if (isAdmin.value) {
             // Add to Admin section if admin
-            groups.find(g => g.label === 'Admin')?.items.push({
-                title: 'Parts',
-                href: '/parts',
-                icon: Package,
-            });
+            groups
+                .find((g) => g.label === 'Admin')
+                ?.items.push({
+                    title: 'Parts',
+                    href: '/parts',
+                    icon: Package,
+                });
         } else {
             // Create Management section for non-admin managers
             groups.push({
@@ -107,7 +114,20 @@ const currentYear = currentDate.getFullYear();
 const currentMonth = currentDate.getMonth();
 const today = currentDate.getDate();
 
-const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+];
 
 const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -121,17 +141,17 @@ const calendarDays = computed(() => {
     const daysInMonth = getDaysInMonth(currentYear, currentMonth);
     const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
     const days: (number | null)[] = [];
-    
+
     // Add empty slots for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
         days.push(null);
     }
-    
+
     // Add all days of the month
     for (let i = 1; i <= daysInMonth; i++) {
         days.push(i);
     }
-    
+
     return days;
 });
 </script>
@@ -162,31 +182,62 @@ const calendarDays = computed(() => {
                 </div>
                 <div class="grid grid-cols-7 gap-0.5 text-xs">
                     <!-- Day headers -->
-                    <div class="text-center font-medium text-muted-foreground py-1">S</div>
-                    <div class="text-center font-medium text-muted-foreground py-1">M</div>
-                    <div class="text-center font-medium text-muted-foreground py-1">T</div>
-                    <div class="text-center font-medium text-muted-foreground py-1">W</div>
-                    <div class="text-center font-medium text-muted-foreground py-1">T</div>
-                    <div class="text-center font-medium text-muted-foreground py-1">F</div>
-                    <div class="text-center font-medium text-muted-foreground py-1">S</div>
-                    
+                    <div
+                        class="py-1 text-center font-medium text-muted-foreground"
+                    >
+                        S
+                    </div>
+                    <div
+                        class="py-1 text-center font-medium text-muted-foreground"
+                    >
+                        M
+                    </div>
+                    <div
+                        class="py-1 text-center font-medium text-muted-foreground"
+                    >
+                        T
+                    </div>
+                    <div
+                        class="py-1 text-center font-medium text-muted-foreground"
+                    >
+                        W
+                    </div>
+                    <div
+                        class="py-1 text-center font-medium text-muted-foreground"
+                    >
+                        T
+                    </div>
+                    <div
+                        class="py-1 text-center font-medium text-muted-foreground"
+                    >
+                        F
+                    </div>
+                    <div
+                        class="py-1 text-center font-medium text-muted-foreground"
+                    >
+                        S
+                    </div>
+
                     <!-- Calendar days -->
                     <div
                         v-for="(day, index) in calendarDays"
                         :key="index"
-                        :class="cn(
-                            'flex h-7 w-full items-center justify-center rounded-md text-xs',
-                            'group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:text-[10px]',
-                            day === today && 'bg-primary text-primary-foreground font-semibold',
-                            day && day !== today && 'hover:bg-accent',
-                            !day && 'pointer-events-none'
-                        )"
+                        :class="
+                            cn(
+                                'flex h-7 w-full items-center justify-center rounded-md text-xs',
+                                'group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:text-[10px]',
+                                day === today &&
+                                    'bg-primary font-semibold text-primary-foreground',
+                                day && day !== today && 'hover:bg-accent',
+                                !day && 'pointer-events-none',
+                            )
+                        "
                     >
                         {{ day }}
                     </div>
                 </div>
             </div>
-            
+
             <NavUser />
         </SidebarFooter>
     </Sidebar>

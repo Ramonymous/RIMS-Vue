@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
 import { Pencil, Trash2 } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { Part } from '@/composables/useParts';
 
 interface Props {
@@ -17,7 +15,7 @@ interface Emits {
     (e: 'delete', part: Part): void;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
     animationDelay: 50,
 });
 
@@ -40,20 +38,28 @@ const getStockBadgeVariant = (stock: number) => {
         >
             <div class="flex flex-col gap-4">
                 <!-- Header -->
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                >
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="text-lg font-semibold truncate">
+                            <h3 class="truncate text-lg font-semibold">
                                 {{ part.part_number }}
                             </h3>
-                            <Badge :variant="part.is_active ? 'default' : 'secondary'">
+                            <Badge
+                                :variant="
+                                    part.is_active ? 'default' : 'secondary'
+                                "
+                            >
                                 {{ part.is_active ? 'Active' : 'Inactive' }}
                             </Badge>
                             <Badge :variant="getStockBadgeVariant(part.stock)">
                                 {{ part.stock.toLocaleString() }} in stock
                             </Badge>
                         </div>
-                        <p class="mt-1 text-sm text-muted-foreground line-clamp-1">
+                        <p
+                            class="mt-1 line-clamp-1 text-sm text-muted-foreground"
+                        >
                             {{ part.part_name }}
                         </p>
                     </div>
@@ -84,13 +90,19 @@ const getStockBadgeVariant = (stock: number) => {
                 <div class="h-px w-full bg-muted" />
 
                 <!-- Part Details Grid -->
-                <div class="grid grid-cols-2 gap-3 text-xs text-muted-foreground sm:grid-cols-3 lg:grid-cols-6">
+                <div
+                    class="grid grid-cols-2 gap-3 text-xs text-muted-foreground sm:grid-cols-3 lg:grid-cols-6"
+                >
                     <div v-if="part.customer_code" class="flex flex-col">
-                        <span class="font-medium text-foreground">Customer</span>
+                        <span class="font-medium text-foreground"
+                            >Customer</span
+                        >
                         <span class="truncate">{{ part.customer_code }}</span>
                     </div>
                     <div v-if="part.supplier_code" class="flex flex-col">
-                        <span class="font-medium text-foreground">Supplier</span>
+                        <span class="font-medium text-foreground"
+                            >Supplier</span
+                        >
                         <span class="truncate">{{ part.supplier_code }}</span>
                     </div>
                     <div v-if="part.model" class="flex flex-col">

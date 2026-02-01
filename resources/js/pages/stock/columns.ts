@@ -1,7 +1,7 @@
-import { h } from 'vue';
 import type { ColumnDef } from '@tanstack/vue-table';
-import { Checkbox } from '@/components/ui/checkbox';
+import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export type Part = {
     id: string;
@@ -27,13 +27,15 @@ export const columns: ColumnDef<Part>[] = [
         header: ({ table }) =>
             h(Checkbox, {
                 modelValue: table.getIsAllPageRowsSelected(),
-                'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
+                'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                    table.toggleAllPageRowsSelected(!!value),
                 ariaLabel: 'Select all',
             }),
         cell: ({ row }) =>
             h(Checkbox, {
                 modelValue: row.getIsSelected(),
-                'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                    row.toggleSelected(!!value),
                 ariaLabel: 'Select row',
             }),
         enableSorting: false,
@@ -62,7 +64,11 @@ export const columns: ColumnDef<Part>[] = [
         accessorKey: 'stock',
         header: () => h('div', { class: 'text-center' }, 'Stock'),
         cell: ({ row }) =>
-            h('div', { class: 'text-center font-semibold' }, row.getValue('stock')),
+            h(
+                'div',
+                { class: 'text-center font-semibold' },
+                row.getValue('stock'),
+            ),
     },
     {
         accessorKey: 'is_active',
@@ -70,8 +76,12 @@ export const columns: ColumnDef<Part>[] = [
         cell: ({ row }) =>
             h(
                 Badge,
-                { variant: row.getValue('is_active') ? 'default' : 'secondary' },
-                () => (row.getValue('is_active') ? 'Active' : 'Inactive')
+                {
+                    variant: row.getValue('is_active')
+                        ? 'default'
+                        : 'secondary',
+                },
+                () => (row.getValue('is_active') ? 'Active' : 'Inactive'),
             ),
     },
     {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { Upload } from 'lucide-vue-next';
+import { ref } from 'vue';
 import { importMethod } from '@/actions/App/Http/Controllers/PartsController';
 import { Button } from '@/components/ui/button';
 import {
@@ -80,8 +80,8 @@ const handleOpenChange = (open: boolean) => {
             <DialogHeader>
                 <DialogTitle>Import Parts from Excel</DialogTitle>
                 <DialogDescription>
-                    Upload an Excel file to bulk import parts. Download the template to see
-                    the required format.
+                    Upload an Excel file to bulk import parts. Download the
+                    template to see the required format.
                 </DialogDescription>
             </DialogHeader>
             <form @submit.prevent="submitImport">
@@ -99,7 +99,10 @@ const handleOpenChange = (open: boolean) => {
                             @change="handleFileChange"
                             required
                         />
-                        <span v-if="importForm.errors.file" class="text-sm text-destructive">
+                        <span
+                            v-if="importForm.errors.file"
+                            class="text-sm text-destructive"
+                        >
                             {{ importForm.errors.file }}
                         </span>
                         <p class="text-sm text-muted-foreground">

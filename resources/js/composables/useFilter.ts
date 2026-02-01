@@ -13,23 +13,23 @@ export interface FilterState<T> {
  */
 export function useFilter<T extends Record<string, any>>(
     data: Ref<T[]> | ComputedRef<T[]>,
-    searchableFields: (keyof T)[]
+    searchableFields: (keyof T)[],
 ): FilterState<T> {
     const searchQuery = ref('');
 
     const filteredData = computed(() => {
         const query = searchQuery.value.trim();
-        
+
         if (!query) {
             return data.value;
         }
 
         const lowerQuery = query.toLowerCase();
-        
+
         return data.value.filter((item) => {
             return searchableFields.some((field) => {
                 const value = item[field];
-                
+
                 if (value === null || value === undefined) {
                     return false;
                 }
@@ -37,7 +37,7 @@ export function useFilter<T extends Record<string, any>>(
                 // Handle nested objects (e.g., user.name)
                 if (typeof value === 'object' && value !== null) {
                     return Object.values(value).some((nestedValue) =>
-                        String(nestedValue).toLowerCase().includes(lowerQuery)
+                        String(nestedValue).toLowerCase().includes(lowerQuery),
                     );
                 }
 

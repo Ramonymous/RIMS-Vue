@@ -19,14 +19,14 @@ export interface OutgoingsState {
     cancelDialog: DialogState<Outgoing>;
     giDialog: DialogState<Outgoing>;
     viewDialog: DialogState<Outgoing>;
-    
+
     // Filter
     filter: FilterState<Outgoing>;
-    
+
     // Actions
     cancel: (outgoing: Outgoing) => void;
     updateGiStatus: (outgoing: Outgoing) => void;
-    
+
     // Utilities
     getStatusVariant: (status: string) => string;
     formatDate: (date: string) => string;
@@ -37,7 +37,9 @@ export interface OutgoingsState {
  * Composable for outgoings business logic
  * Handles all outgoing-related operations and state
  */
-export function useOutgoings(outgoings: ComputedRef<Outgoing[]>): OutgoingsState {
+export function useOutgoings(
+    outgoings: ComputedRef<Outgoing[]>,
+): OutgoingsState {
     // Dialog states
     const cancelDialog = useDialog<Outgoing>();
     const giDialog = useDialog<Outgoing>();
@@ -48,26 +50,39 @@ export function useOutgoings(outgoings: ComputedRef<Outgoing[]>): OutgoingsState
 
     // Actions
     const cancel = (outgoing: Outgoing) => {
-        router.post(`/outgoings/${outgoing.id}/cancel`, {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                cancelDialog.close();
+        router.post(
+            `/outgoings/${outgoing.id}/cancel`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    cancelDialog.close();
+                },
             },
-        });
+        );
     };
 
     const updateGiStatus = (outgoing: Outgoing) => {
-        router.post(`/outgoings/${outgoing.id}/gi`, {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                giDialog.close();
+        router.post(
+            `/outgoings/${outgoing.id}/gi`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    giDialog.close();
+                },
             },
-        });
+        );
     };
 
     // Utilities
-    const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
-        const variants: Record<string, 'default' | 'destructive' | 'outline' | 'secondary'> = {
+    const getStatusVariant = (
+        status: string,
+    ): 'default' | 'destructive' | 'outline' | 'secondary' => {
+        const variants: Record<
+            string,
+            'default' | 'destructive' | 'outline' | 'secondary'
+        > = {
             completed: 'default',
             draft: 'secondary',
             cancelled: 'destructive',

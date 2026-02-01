@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { PackageCheck, Plus, Trash2, AlertTriangle, Search } from 'lucide-vue-next';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import {
+    PackageCheck,
+    Plus,
+    Trash2,
+    AlertTriangle,
+    Search,
+} from 'lucide-vue-next';
+import { nextTick, ref, watch } from 'vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -12,6 +17,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -19,10 +26,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
 
 type Part = {
     id: string;
@@ -67,7 +73,7 @@ const form = useForm({
     issued_at: props.outgoing.issued_at.slice(0, 16),
     status: props.outgoing.status as 'draft' | 'completed',
     notes: props.outgoing.notes || '',
-    items: props.outgoing.items.map(item => ({
+    items: props.outgoing.items.map((item) => ({
         id: crypto.randomUUID(),
         part_id: item.part.id,
         qty: item.qty,
@@ -80,17 +86,18 @@ const itemRefs = ref<{ [key: string]: HTMLElement }>({});
 const partSearchQueries = ref<{ [key: string]: string }>({});
 
 // Initialize search queries for existing items
-form.items.forEach(item => {
+form.items.forEach((item) => {
     partSearchQueries.value[item.id] = '';
 });
 
 const getFilteredPartsForItem = (itemId: string) => {
     const searchQuery = partSearchQueries.value[itemId]?.toLowerCase() || '';
     if (!searchQuery) return props.parts;
-    
-    return props.parts.filter(part =>
-        part.part_number.toLowerCase().includes(searchQuery) ||
-        part.part_name.toLowerCase().includes(searchQuery)
+
+    return props.parts.filter(
+        (part) =>
+            part.part_number.toLowerCase().includes(searchQuery) ||
+            part.part_name.toLowerCase().includes(searchQuery),
     );
 };
 
@@ -114,45 +121,49 @@ function removeItem(index: number) {
 
 function checkDuplicatePart(index: number, partId: any) {
     if (!partId) return;
-    
+
     const partIdStr = String(partId);
     const duplicateIndex = form.items.findIndex(
-        (item, idx) => idx !== index && item.part_id === partIdStr
+        (item, idx) => idx !== index && item.part_id === partIdStr,
     );
-    
+
     if (duplicateIndex !== -1) {
-        const part = props.parts.find(p => p.id === partIdStr);
+        const part = props.parts.find((p) => p.id === partIdStr);
         duplicateAlert.value = `Part "${part?.part_number}" is already added in this outgoing!`;
-        
+
         // Highlight both items
         form.items[index].isHighlighted = true;
         form.items[duplicateIndex].isHighlighted = true;
-        
+
         // Focus on the duplicate item
         nextTick(() => {
             const elementKey = `item-${form.items[duplicateIndex].id}`;
             if (itemRefs.value[elementKey]) {
-                itemRefs.value[elementKey].scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
+                itemRefs.value[elementKey].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
                 });
             }
         });
     } else {
         // Remove highlight
         form.items[index].isHighlighted = false;
-        
+
         // Check if any duplicates remain
-        const hasDuplicates = form.items.some((item, idx) => 
-            form.items.findIndex((i, iIdx) => iIdx !== idx && i.part_id === item.part_id && i.part_id) !== -1
+        const hasDuplicates = form.items.some(
+            (item, idx) =>
+                form.items.findIndex(
+                    (i, iIdx) =>
+                        iIdx !== idx && i.part_id === item.part_id && i.part_id,
+                ) !== -1,
         );
-        
+
         if (!hasDuplicates) {
             duplicateAlert.value = null;
-            form.items.forEach(item => item.isHighlighted = false);
+            form.items.forEach((item) => (item.isHighlighted = false));
         }
     }
-    
+
     checkStockForAllItems();
 }
 
@@ -163,30 +174,32 @@ function checkStockForAllItems() {
     }
 
     const stockCheck: { [key: string]: number } = {};
-    
+
     for (const item of form.items) {
         if (!item.part_id) continue;
-        
+
         stockCheck[item.part_id] = (stockCheck[item.part_id] || 0) + item.qty;
     }
-    
+
     for (const [partId, totalQty] of Object.entries(stockCheck)) {
-        const part = props.parts.find(p => p.id === partId);
+        const part = props.parts.find((p) => p.id === partId);
         if (part && totalQty > part.stock) {
             insufficientStockAlert.value = `Insufficient stock for "${part.part_number}". Available: ${part.stock}, Required: ${totalQty}`;
             return;
         }
     }
-    
+
     insufficientStockAlert.value = null;
 }
 
 function getPartInfo(partId: string): Part | undefined {
-    return props.parts.find(p => p.id === partId);
+    return props.parts.find((p) => p.id === partId);
 }
 
 function getTotalQtyForPart(partId: string): number {
-    return form.items.filter(item => item.part_id === partId).reduce((sum, item) => sum + item.qty, 0);
+    return form.items
+        .filter((item) => item.part_id === partId)
+        .reduce((sum, item) => sum + item.qty, 0);
 }
 
 function saveDraft() {
@@ -205,7 +218,7 @@ function submitForm() {
     if (duplicateAlert.value) {
         return;
     }
-    
+
     form.put(`/outgoings/${props.outgoing.id}`, {
         preserveScroll: true,
     });
@@ -218,14 +231,21 @@ function setItemRef(id: string, el: any) {
 }
 
 // Watch for quantity changes
-watch(() => form.items.map(i => i.qty), () => {
-    checkStockForAllItems();
-}, { deep: true });
+watch(
+    () => form.items.map((i) => i.qty),
+    () => {
+        checkStockForAllItems();
+    },
+    { deep: true },
+);
 
 // Watch for status changes
-watch(() => form.status, () => {
-    checkStockForAllItems();
-});
+watch(
+    () => form.status,
+    () => {
+        checkStockForAllItems();
+    },
+);
 </script>
 
 <template>
@@ -248,7 +268,7 @@ watch(() => form.status, () => {
                     <!-- Header Section -->
                     <div class="grid gap-4 rounded-lg border p-4">
                         <h3 class="font-semibold">Document Information</h3>
-                        
+
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="grid gap-2">
                                 <Label for="doc-number">
@@ -322,7 +342,10 @@ watch(() => form.status, () => {
                             </AlertDescription>
                         </Alert>
 
-                        <Alert v-if="insufficientStockAlert" variant="destructive">
+                        <Alert
+                            v-if="insufficientStockAlert"
+                            variant="destructive"
+                        >
                             <AlertTriangle class="h-4 w-4" />
                             <AlertDescription>
                                 {{ insufficientStockAlert }}
@@ -349,11 +372,14 @@ watch(() => form.status, () => {
                             :ref="(el) => setItemRef(item.id, el)"
                             class="grid gap-4 rounded-lg border p-4 transition-colors"
                             :class="{
-                                'border-yellow-500 bg-yellow-50 dark:bg-yellow-950': item.isHighlighted
+                                'border-yellow-500 bg-yellow-50 dark:bg-yellow-950':
+                                    item.isHighlighted,
                             }"
                         >
                             <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium">Item #{{ index + 1 }}</span>
+                                <span class="text-sm font-medium"
+                                    >Item #{{ index + 1 }}</span
+                                >
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -372,37 +398,61 @@ watch(() => form.status, () => {
                                     </Label>
                                     <Select
                                         v-model="item.part_id"
-                                        @update:model-value="checkDuplicatePart(index, $event)"
+                                        @update:model-value="
+                                            checkDuplicatePart(index, $event)
+                                        "
                                         required
                                     >
                                         <SelectTrigger :id="`part-${item.id}`">
-                                            <SelectValue placeholder="Select part" />
+                                            <SelectValue
+                                                placeholder="Select part"
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <div class="sticky top-0 z-10 bg-popover p-2 pb-1">
+                                            <div
+                                                class="sticky top-0 z-10 bg-popover p-2 pb-1"
+                                            >
                                                 <div class="relative">
-                                                    <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Search
+                                                        class="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground"
+                                                    />
                                                     <Input
-                                                        v-model="partSearchQueries[item.id]"
+                                                        v-model="
+                                                            partSearchQueries[
+                                                                item.id
+                                                            ]
+                                                        "
                                                         placeholder="Search parts..."
-                                                        class="pl-8 h-9"
+                                                        class="h-9 pl-8"
                                                         @keydown.enter.prevent
                                                     />
                                                 </div>
                                             </div>
-                                            <div class="max-h-60 overflow-y-auto">
+                                            <div
+                                                class="max-h-60 overflow-y-auto"
+                                            >
                                                 <SelectItem
-                                                    v-for="part in getFilteredPartsForItem(item.id)"
+                                                    v-for="part in getFilteredPartsForItem(
+                                                        item.id,
+                                                    )"
                                                     :key="part.id"
                                                     :value="part.id"
                                                 >
-                                                    {{ part.part_number }} - {{ part.part_name }}
-                                                    <span class="text-muted-foreground">
-                                                        (Stock: {{ part.stock }})
+                                                    {{ part.part_number }} -
+                                                    {{ part.part_name }}
+                                                    <span
+                                                        class="text-muted-foreground"
+                                                    >
+                                                        (Stock:
+                                                        {{ part.stock }})
                                                     </span>
                                                 </SelectItem>
                                                 <div
-                                                    v-if="getFilteredPartsForItem(item.id).length === 0"
+                                                    v-if="
+                                                        getFilteredPartsForItem(
+                                                            item.id,
+                                                        ).length === 0
+                                                    "
                                                     class="py-6 text-center text-sm text-muted-foreground"
                                                 >
                                                     No parts found
@@ -411,10 +461,18 @@ watch(() => form.status, () => {
                                         </SelectContent>
                                     </Select>
                                     <span
-                                        v-if="form.errors[`items.${index}.part_id`]"
+                                        v-if="
+                                            form.errors[
+                                                `items.${index}.part_id`
+                                            ]
+                                        "
                                         class="text-sm text-destructive"
                                     >
-                                        {{ form.errors[`items.${index}.part_id`] }}
+                                        {{
+                                            form.errors[
+                                                `items.${index}.part_id`
+                                            ]
+                                        }}
                                     </span>
                                 </div>
 
@@ -443,22 +501,37 @@ watch(() => form.status, () => {
                                 v-if="item.part_id && getPartInfo(item.part_id)"
                                 class="rounded-md p-3 text-sm"
                                 :class="[
-                                    getTotalQtyForPart(item.part_id) > (getPartInfo(item.part_id)?.stock || 0)
-                                        ? 'bg-destructive/10 border border-destructive'
-                                        : 'bg-muted'
+                                    getTotalQtyForPart(item.part_id) >
+                                    (getPartInfo(item.part_id)?.stock || 0)
+                                        ? 'border border-destructive bg-destructive/10'
+                                        : 'bg-muted',
                                 ]"
                             >
                                 <div class="grid gap-1">
                                     <div>
-                                        <span class="font-medium">Current Stock:</span>
+                                        <span class="font-medium"
+                                            >Current Stock:</span
+                                        >
                                         {{ getPartInfo(item.part_id)?.stock }}
                                     </div>
                                     <div>
-                                        <span class="font-medium">After Issue:</span>
-                                        {{ (getPartInfo(item.part_id)?.stock || 0) - getTotalQtyForPart(item.part_id) }}
+                                        <span class="font-medium"
+                                            >After Issue:</span
+                                        >
+                                        {{
+                                            (getPartInfo(item.part_id)?.stock ||
+                                                0) -
+                                            getTotalQtyForPart(item.part_id)
+                                        }}
                                         <span
-                                            v-if="getTotalQtyForPart(item.part_id) > (getPartInfo(item.part_id)?.stock || 0)"
-                                            class="ml-2 text-destructive font-medium"
+                                            v-if="
+                                                getTotalQtyForPart(
+                                                    item.part_id,
+                                                ) >
+                                                (getPartInfo(item.part_id)
+                                                    ?.stock || 0)
+                                            "
+                                            class="ml-2 font-medium text-destructive"
                                         >
                                             (Insufficient Stock!)
                                         </span>
@@ -482,16 +555,29 @@ watch(() => form.status, () => {
                             type="button"
                             variant="outline"
                             @click="saveDraft"
-                            :disabled="form.processing || !form.items.length || !!duplicateAlert"
+                            :disabled="
+                                form.processing ||
+                                !form.items.length ||
+                                !!duplicateAlert
+                            "
                         >
                             Save as Draft
                         </Button>
                         <Button
                             type="button"
                             @click="confirm"
-                            :disabled="form.processing || !form.items.length || !!duplicateAlert || !!insufficientStockAlert"
+                            :disabled="
+                                form.processing ||
+                                !form.items.length ||
+                                !!duplicateAlert ||
+                                !!insufficientStockAlert
+                            "
                         >
-                            {{ form.processing ? 'Processing...' : 'Confirm & Update Stock' }}
+                            {{
+                                form.processing
+                                    ? 'Processing...'
+                                    : 'Confirm & Update Stock'
+                            }}
                         </Button>
                     </div>
                 </CardContent>

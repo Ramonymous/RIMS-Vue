@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
+import { useDebounceFn } from '@vueuse/core';
 import { Package, Plus, Download, PackageOpen, Search } from 'lucide-vue-next';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import { ref, watch } from 'vue';
+import PartFormDialog from '@/components/parts/PartFormDialog.vue';
+import PartImportDialog from '@/components/parts/PartImportDialog.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -12,6 +13,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { DataTable, DataTablePagination } from '@/components/ui/data-table';
 import {
     Dialog,
     DialogContent,
@@ -20,16 +22,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import EmptyState from '@/components/ui/empty-state.vue';
+import { Input } from '@/components/ui/input';
 import PageHeader from '@/components/ui/page-header.vue';
-import PartsList from '@/components/parts/PartsList.vue';
-import PartFormDialog from '@/components/parts/PartFormDialog.vue';
-import PartImportDialog from '@/components/parts/PartImportDialog.vue';
-import { exportTemplate } from '@/actions/App/Http/Controllers/PartsController';
-import type { Part } from '@/composables/useParts';
-import { usePartsStore } from '@/stores/usePartsStore';
-import { useTableState } from '@/composables/useTableState';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { createColumns, type Part } from './columns';
 
 type Props = {
     parts: {
@@ -44,59 +42,20 @@ type Props = {
             active: boolean;
         }>;
     };
+    filters: {
+        search?: string;
+    };
 };
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Parts', href: '/parts' },
-];
-
-// Store initialization with caching
-const partsStore = usePartsStore();
-
-// Initialize store data on mount
-onMounted(() => {
-    partsStore.setParts(props.parts.data);
-});
-
-// Watch for data changes from Inertia and update store
-watch(
-    () => props.parts.data,
-    (newParts) => {
-        partsStore.setParts(newParts);
-    }
-);
-
-// Table state with optimized search
-const tableState = useTableState<Part>({
-    defaultSort: 'part_number',
-    debounceMs: 300,
-});
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parts', href: '/parts' }];
 
 // Dialogs
 const createDialogOpen = ref(false);
 const editDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
 const selectedPart = ref<Part | null>(null);
-
-// Computed filtered parts with debounced search
-const filteredParts = computed(() => {
-    const query = tableState.debouncedSearch.value.toLowerCase().trim();
-    
-    if (!query) {
-        return partsStore.parts.value;
-    }
-
-    return partsStore.parts.value.filter(
-        (part) =>
-            part.part_number.toLowerCase().includes(query) ||
-            part.part_name.toLowerCase().includes(query) ||
-            part.customer_code?.toLowerCase().includes(query) ||
-            part.supplier_code?.toLowerCase().includes(query) ||
-            part.model?.toLowerCase().includes(query)
-    );
-});
 
 // Actions
 const openEditDialog = (part: Part) => {
@@ -112,38 +71,48 @@ const openDeleteDialog = (part: Part) => {
 const confirmDelete = () => {
     if (!selectedPart.value) return;
 
-    // Optimistic update
-    const rollback = partsStore.deletePartOptimistic(selectedPart.value.id);
-
     router.delete(`/parts/${selectedPart.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
             deleteDialogOpen.value = false;
             selectedPart.value = null;
         },
-        onError: () => {
-            // Revert optimistic update on error
-            rollback.revert();
-        },
     });
 };
 
 const downloadTemplate = () => {
-    window.location.href = exportTemplate.url();
-};
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
+    window.location.href = '/parts/template';
 };
 
 const handleFormSuccess = () => {
     // Reload the page data after import/create/edit
     router.reload({ only: ['parts'] });
 };
+
+// Create columns with context
+const columns = createColumns({
+    onEdit: openEditDialog,
+    onDelete: openDeleteDialog,
+});
+
+// Server-side search
+const searchQuery = ref(props.filters.search || '');
+
+const debouncedSearch = useDebounceFn(() => {
+    router.get(
+        '/parts',
+        {
+            search: searchQuery.value || undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['parts', 'filters'],
+        },
+    );
+}, 300);
+
+watch(searchQuery, debouncedSearch);
 </script>
 
 <template>
@@ -152,7 +121,9 @@ const handleFormSuccess = () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
             <!-- Page Header -->
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div
+                class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <PageHeader
                     title="Parts Management"
                     description="Manage inventory parts and stock levels"
@@ -171,7 +142,11 @@ const handleFormSuccess = () => {
 
                     <PartImportDialog @success="handleFormSuccess" />
 
-                    <Button size="sm" class="gap-2" @click="createDialogOpen = true">
+                    <Button
+                        size="sm"
+                        class="gap-2"
+                        @click="createDialogOpen = true"
+                    >
                         <Plus class="h-4 w-4" />
                         Add Part
                     </Button>
@@ -199,10 +174,10 @@ const handleFormSuccess = () => {
                     <div class="mb-6">
                         <div class="relative">
                             <Search
-                                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                                class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                             />
                             <Input
-                                v-model="tableState.searchQuery.value"
+                                v-model="searchQuery"
                                 placeholder="Search parts by number, name, code, or model..."
                                 class="pl-9"
                             />
@@ -211,7 +186,7 @@ const handleFormSuccess = () => {
 
                     <!-- Empty State - No Parts -->
                     <EmptyState
-                        v-if="partsStore.parts.value.length === 0 && !tableState.searchQuery.value"
+                        v-if="props.parts.data.length === 0 && !searchQuery"
                         :icon="PackageOpen"
                         title="No parts yet"
                         description="Get started by adding your first part to the inventory"
@@ -221,40 +196,22 @@ const handleFormSuccess = () => {
 
                     <!-- Empty State - No Search Results -->
                     <EmptyState
-                        v-else-if="filteredParts.length === 0 && tableState.searchQuery.value"
+                        v-else-if="props.parts.data.length === 0 && searchQuery"
                         :icon="Search"
                         title="No results found"
-                        :description="`No parts found matching '${tableState.searchQuery.value}'`"
+                        :description="`No parts found matching '${searchQuery}'`"
                     />
 
-                    <!-- Parts List -->
-                    <PartsList
+                    <!-- DataTable -->
+                    <DataTable
                         v-else
-                        :parts="filteredParts"
-                        :format-date="formatDate"
-                        @edit="openEditDialog"
-                        @delete="openDeleteDialog"
+                        :columns="columns"
+                        :data="props.parts.data"
                     />
 
                     <!-- Pagination -->
-                    <div
-                        v-if="props.parts.last_page > 1 && !tableState.searchQuery.value"
-                        class="mt-8 flex flex-wrap justify-center gap-2"
-                    >
-                        <Link
-                            v-for="link in props.parts.links"
-                            :key="link.label"
-                            :href="link.url || '#'"
-                            :class="[
-                                'rounded-md px-4 py-2 text-sm font-medium transition-all',
-                                link.active
-                                    ? 'bg-primary text-primary-foreground shadow-sm'
-                                    : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground',
-                                !link.url && 'cursor-not-allowed opacity-50',
-                            ]"
-                            :disabled="!link.url"
-                            v-html="link.label"
-                        />
+                    <div v-if="props.parts.last_page > 1" class="mt-8">
+                        <DataTablePagination :data="props.parts" />
                     </div>
                 </CardContent>
             </Card>
@@ -269,7 +226,7 @@ const handleFormSuccess = () => {
 
         <PartFormDialog
             :open="editDialogOpen"
-            :part="selectedPart"
+            :part="selectedPart as any"
             @update:open="editDialogOpen = $event"
             @success="handleFormSuccess"
         />
@@ -282,14 +239,18 @@ const handleFormSuccess = () => {
                     <DialogDescription>
                         This will permanently delete the part "{{
                             selectedPart?.part_number
-                        }} - {{ selectedPart?.part_name }}". This action cannot be undone.
+                        }}
+                        - {{ selectedPart?.part_name }}". This action cannot be
+                        undone.
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
                     <Button variant="outline" @click="deleteDialogOpen = false">
                         Cancel
                     </Button>
-                    <Button variant="destructive" @click="confirmDelete">Delete</Button>
+                    <Button variant="destructive" @click="confirmDelete"
+                        >Delete</Button
+                    >
                 </DialogFooter>
             </DialogContent>
         </Dialog>

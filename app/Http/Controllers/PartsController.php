@@ -21,11 +21,11 @@ class PartsController extends Controller
         private AuthorizationService $authService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authService->authorize(auth()->user(), ['admin', 'manager']);
 
-        $parts = Parts::query()
+        $query = Parts::query()
             ->select([
                 'id',
                 'part_number',
@@ -39,13 +39,28 @@ class PartsController extends Controller
                 'address',
                 'is_active',
                 'created_at',
-            ])
+            ]);
+
+        // Server-side search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('part_number', 'LIKE', "%{$search}%")
+                    ->orWhere('part_name', 'LIKE', "%{$search}%")
+                    ->orWhere('customer_code', 'LIKE', "%{$search}%")
+                    ->orWhere('supplier_code', 'LIKE', "%{$search}%")
+                    ->orWhere('model', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $parts = $query
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('parts/Index', [
             'parts' => $parts,
+            'filters' => $request->only(['search']),
         ]);
     }
 

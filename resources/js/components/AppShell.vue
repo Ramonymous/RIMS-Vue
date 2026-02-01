@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { usePage } from '@inertiajs/vue3';
 import type { PageProps as InertiaPageProps } from '@inertiajs/core';
+import { usePage } from '@inertiajs/vue3';
 import { Loader2 } from 'lucide-vue-next';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/composables/useToast';
@@ -63,7 +63,7 @@ watch(
             toast.info(flash.info);
         }
     },
-    { deep: true }
+    { deep: true },
 );
 </script>
 
@@ -76,15 +76,17 @@ watch(
         <slot />
         <Toaster />
     </SidebarProvider>
+    <div
+        v-if="isLoading"
+        class="fixed inset-0 z-[9999] flex items-center justify-center bg-background/60 backdrop-blur-sm"
+        aria-live="polite"
+        aria-busy="true"
+    >
         <div
-            v-if="isLoading"
-            class="fixed inset-0 z-[9999] flex items-center justify-center bg-background/60 backdrop-blur-sm"
-            aria-live="polite"
-            aria-busy="true"
+            class="flex items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-lg"
         >
-            <div class="flex items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-lg">
-                <Loader2 class="h-5 w-5 animate-spin text-primary" />
-                <span class="text-sm font-medium text-foreground">Loading...</span>
-            </div>
+            <Loader2 class="h-5 w-5 animate-spin text-primary" />
+            <span class="text-sm font-medium text-foreground">Loading...</span>
         </div>
+    </div>
 </template>

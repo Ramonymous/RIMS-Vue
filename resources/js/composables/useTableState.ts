@@ -1,5 +1,4 @@
-import { ref, computed, type Ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { ref, type Ref } from 'vue';
 import { useDebounce } from './useDebounce';
 
 export interface TableColumn<T = any> {
@@ -13,14 +12,14 @@ export interface TableState<T> {
     // Search
     searchQuery: Ref<string>;
     debouncedSearch: Ref<string>;
-    
+
     // Sorting
     sortKey: Ref<keyof T | ''>;
     sortOrder: Ref<'asc' | 'desc'>;
-    
+
     // Selection
     selectedItems: Ref<Set<string>>;
-    
+
     // Methods
     setSearch: (query: string) => void;
     clearSearch: () => void;
@@ -41,7 +40,7 @@ export function useTableState<T extends { id: string }>(
         defaultSort?: keyof T;
         defaultOrder?: 'asc' | 'desc';
         debounceMs?: number;
-    } = {}
+    } = {},
 ): TableState<T> {
     const searchQuery = ref('');
     const sortKey = ref<keyof T | ''>(config.defaultSort || '');
@@ -94,7 +93,10 @@ export function useTableState<T extends { id: string }>(
     };
 
     const allSelected = (items: T[]) => {
-        return items.length > 0 && items.every((item) => selectedItems.value.has(item.id));
+        return (
+            items.length > 0 &&
+            items.every((item) => selectedItems.value.has(item.id))
+        );
     };
 
     return {

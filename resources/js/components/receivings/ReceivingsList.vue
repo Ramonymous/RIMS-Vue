@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { Pencil, XCircle, CheckCircle, Eye } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { Receiving } from '@/composables/useReceivings';
 
 interface Props {
     receivings: Receiving[];
     formatDate: (date: string) => string;
-    getStatusVariant: (status: string) => 'default' | 'destructive' | 'outline' | 'secondary';
+    getStatusVariant: (
+        status: string,
+    ) => 'default' | 'destructive' | 'outline' | 'secondary';
     canEdit: (receiving: Receiving) => boolean;
     canConfirmGR: boolean;
     canManageReceivings: boolean;
@@ -20,7 +22,7 @@ interface Emits {
     (e: 'updateGr', receiving: Receiving): void;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 const emit = defineEmits<Emits>();
 </script>
 
@@ -32,7 +34,7 @@ const emit = defineEmits<Emits>();
             class="flex items-start justify-between rounded-lg border p-4 transition-all hover:shadow-md"
         >
             <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
+                <div class="mb-2 flex items-center gap-2">
                     <h3 class="font-semibold">
                         {{ receiving.doc_number }}
                     </h3>
@@ -92,7 +94,9 @@ const emit = defineEmits<Emits>();
                     <CheckCircle class="h-4 w-4" />
                 </Button>
                 <Button
-                    v-if="canManageReceivings && receiving.status !== 'cancelled'"
+                    v-if="
+                        canManageReceivings && receiving.status !== 'cancelled'
+                    "
                     variant="outline"
                     size="sm"
                     @click="emit('cancel', receiving)"

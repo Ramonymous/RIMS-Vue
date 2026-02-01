@@ -7,9 +7,10 @@ import { ref, computed, onMounted, onUnmounted, type Ref } from 'vue';
 export function useIntersectionObserver(
     target: Ref<Element | null>,
     callback: (entry: IntersectionObserverEntry) => void,
-    options: IntersectionObserverInit = {}
+    options: IntersectionObserverInit = {},
 ) {
-    const isSupported = typeof window !== 'undefined' && 'IntersectionObserver' in window;
+    const isSupported =
+        typeof window !== 'undefined' && 'IntersectionObserver' in window;
     const isIntersecting = ref(false);
     let observer: IntersectionObserver | null = null;
 
@@ -31,7 +32,7 @@ export function useIntersectionObserver(
             {
                 threshold: 0.1,
                 ...options,
-            }
+            },
         );
 
         observer.observe(target.value);
@@ -84,15 +85,19 @@ export function useVirtualScroll<T>(
     items: Ref<T[]>,
     itemHeight: number,
     containerHeight: number,
-    buffer = 5
+    buffer = 5,
 ) {
     const scrollTop = ref(0);
 
     const visibleRange = computed(() => {
-        const start = Math.max(0, Math.floor(scrollTop.value / itemHeight) - buffer);
+        const start = Math.max(
+            0,
+            Math.floor(scrollTop.value / itemHeight) - buffer,
+        );
         const end = Math.min(
             items.value.length,
-            Math.ceil((scrollTop.value + containerHeight) / itemHeight) + buffer
+            Math.ceil((scrollTop.value + containerHeight) / itemHeight) +
+                buffer,
         );
         return { start, end };
     });

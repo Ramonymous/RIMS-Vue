@@ -1,19 +1,38 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { FileInput, Plus, Trash2, AlertTriangle, Search, QrCode } from 'lucide-vue-next';
-import { store } from '@/routes/requests';
-import { index as requestsIndex } from '@/routes/requests';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import {
+    FileInput,
+    Plus,
+    Trash2,
+    AlertTriangle,
+    Search,
+    QrCode,
+} from 'lucide-vue-next';
+import { computed, nextTick, ref } from 'vue';
+import QRScanner from '@/components/QRScanner.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import QRScanner from '@/components/QRScanner.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { store } from '@/routes/requests';
+import { index as requestsIndex } from '@/routes/requests';
+import { type BreadcrumbItem } from '@/types';
 
 type Part = {
     id: string;
@@ -63,10 +82,11 @@ const destinations = ['Line KS', 'Line SU2ID'];
 function getFilteredPartsForItem(itemId: string) {
     const searchQuery = partSearchQueries.value[itemId]?.toLowerCase() || '';
     if (!searchQuery) return props.parts;
-    
-    return props.parts.filter(part =>
-        part.part_number.toLowerCase().includes(searchQuery) ||
-        part.part_name.toLowerCase().includes(searchQuery)
+
+    return props.parts.filter(
+        (part) =>
+            part.part_number.toLowerCase().includes(searchQuery) ||
+            part.part_name.toLowerCase().includes(searchQuery),
     );
 }
 
@@ -103,55 +123,59 @@ function handleQRScanned(scannedValue: string) {
     if (activeItemIndex.value === null) return;
 
     // Find part by part_number
-    const part = props.parts.find(p => p.part_number === scannedValue);
-    
+    const part = props.parts.find((p) => p.part_number === scannedValue);
+
     if (part) {
         form.items[activeItemIndex.value].part_id = part.id;
         checkDuplicatePart(activeItemIndex.value, part.id);
     } else {
         duplicateAlert.value = `Part "${scannedValue}" not found in the system!`;
     }
-    
+
     closeQRScanner();
 }
 
 function checkDuplicatePart(index: number, partId: any) {
     if (!partId) return;
-    
+
     const partIdStr = String(partId);
     const duplicateIndex = form.items.findIndex(
-        (item, idx) => idx !== index && item.part_id === partIdStr
+        (item, idx) => idx !== index && item.part_id === partIdStr,
     );
-    
+
     if (duplicateIndex !== -1) {
-        const part = props.parts.find(p => p.id === partIdStr);
+        const part = props.parts.find((p) => p.id === partIdStr);
         duplicateAlert.value = `Part "${part?.part_number}" is already added in this request!`;
-        
+
         form.items[index].isHighlighted = true;
         form.items[duplicateIndex].isHighlighted = true;
-        
+
         nextTick(() => {
             const elementKey = `item-${form.items[duplicateIndex].id}`;
             if (itemRefs.value[elementKey]) {
-                itemRefs.value[elementKey].scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
+                itemRefs.value[elementKey].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
                 });
             }
         });
     } else {
         form.items[index].isHighlighted = false;
-        
-        const hasDuplicates = form.items.some((item, idx) => 
-            form.items.findIndex((i, iIdx) => iIdx !== idx && i.part_id === item.part_id && i.part_id) !== -1
+
+        const hasDuplicates = form.items.some(
+            (item, idx) =>
+                form.items.findIndex(
+                    (i, iIdx) =>
+                        iIdx !== idx && i.part_id === item.part_id && i.part_id,
+                ) !== -1,
         );
-        
+
         if (!hasDuplicates) {
             duplicateAlert.value = null;
-            form.items.forEach(item => item.isHighlighted = false);
+            form.items.forEach((item) => (item.isHighlighted = false));
         }
     }
-    
+
     // Check if part is already requested to the current destination
     checkAlreadyRequested(index, partIdStr);
 }
@@ -161,12 +185,12 @@ function checkAlreadyRequested(index: number, partId: string) {
         alreadyRequestedAlert.value = null;
         return;
     }
-    
-    const part = props.parts.find(p => p.id === partId);
+
+    const part = props.parts.find((p) => p.id === partId);
     if (!part) return;
-    
+
     const pendingParts = props.pendingRequests[form.destination] || [];
-    
+
     if (pendingParts.includes(part.part_number)) {
         alreadyRequestedAlert.value = `Part "${part.part_number}" is already requested to ${form.destination} and pending supply!`;
         form.items[index].part_id = ''; // Clear the selection
@@ -177,7 +201,7 @@ function checkAlreadyRequested(index: number, partId: string) {
 
 function checkAllItemsForDestination() {
     if (!form.destination) return;
-    
+
     // Check all current items against new destination
     form.items.forEach((item, index) => {
         if (item.part_id) {
@@ -200,20 +224,21 @@ function submitForm() {
             is_supplied: false,
         })),
     };
-    
+
     form.transform(() => transformedData).post(store.url(), {
         preserveScroll: true,
         headers: {
-            'Accept': 'application/json',
+            Accept: 'application/json',
         },
         onSuccess: (response: any) => {
             // Response includes message and request_number in data
-            const message = response.props?.flash?.message || 
-                           response.props?.jetstream?.flash?.message || 
-                           'Request confirmed successfully.';
-            
+            const message =
+                response.props?.flash?.message ||
+                response.props?.jetstream?.flash?.message ||
+                'Request confirmed successfully.';
+
             alert(message);
-            
+
             // Reset form
             form.reset();
             form.items = [];
@@ -223,20 +248,23 @@ function submitForm() {
             partSearchQueries.value = {};
         },
         onError: (errors: any) => {
-            const errorMessage = Object.values(errors).flat().join(', ') || 
-                               'Failed to create request. Please check the form and try again.';
+            const errorMessage =
+                Object.values(errors).flat().join(', ') ||
+                'Failed to create request. Please check the form and try again.';
             alert(errorMessage);
         },
     });
 }
 
 const isFormValid = computed(() => {
-    return form.requested_at &&
+    return (
+        form.requested_at &&
         form.destination &&
         form.items.length > 0 &&
-        form.items.every(item => item.part_id) &&
+        form.items.every((item) => item.part_id) &&
         !duplicateAlert.value &&
-        !alreadyRequestedAlert.value;
+        !alreadyRequestedAlert.value
+    );
 });
 </script>
 
@@ -251,28 +279,42 @@ const isFormValid = computed(() => {
                         <FileInput class="h-5 w-5" />
                         Create New Request
                     </CardTitle>
-                    <CardDescription>Request parts for your destination (no stock changes)</CardDescription>
+                    <CardDescription
+                        >Request parts for your destination (no stock
+                        changes)</CardDescription
+                    >
                 </CardHeader>
 
                 <CardContent class="space-y-6">
                     <!-- Alert for duplicates -->
                     <Alert v-if="duplicateAlert" variant="destructive">
                         <AlertTriangle class="h-4 w-4" />
-                        <AlertDescription>{{ duplicateAlert }}</AlertDescription>
+                        <AlertDescription>{{
+                            duplicateAlert
+                        }}</AlertDescription>
                     </Alert>
 
                     <!-- Alert for already requested items -->
                     <Alert v-if="alreadyRequestedAlert" variant="destructive">
                         <AlertTriangle class="h-4 w-4" />
-                        <AlertDescription>{{ alreadyRequestedAlert }}</AlertDescription>
+                        <AlertDescription>{{
+                            alreadyRequestedAlert
+                        }}</AlertDescription>
                     </Alert>
 
                     <!-- Backend validation errors -->
-                    <Alert v-if="Object.keys(form.errors).length > 0" variant="destructive">
+                    <Alert
+                        v-if="Object.keys(form.errors).length > 0"
+                        variant="destructive"
+                    >
                         <AlertTriangle class="h-4 w-4" />
                         <AlertDescription>
                             <div class="space-y-1">
-                                <p v-for="(error, key) in form.errors" :key="key" class="text-sm">
+                                <p
+                                    v-for="(error, key) in form.errors"
+                                    :key="key"
+                                    class="text-sm"
+                                >
                                     {{ error }}
                                 </p>
                             </div>
@@ -287,26 +329,50 @@ const isFormValid = computed(() => {
                                 id="requested_at"
                                 v-model="form.requested_at"
                                 type="datetime-local"
-                                :class="{ 'border-red-500': form.errors.requested_at }"
+                                :class="{
+                                    'border-red-500': form.errors.requested_at,
+                                }"
                             />
-                            <p v-if="form.errors.requested_at" class="text-sm text-red-500">
+                            <p
+                                v-if="form.errors.requested_at"
+                                class="text-sm text-red-500"
+                            >
                                 {{ form.errors.requested_at }}
                             </p>
                         </div>
 
                         <div class="space-y-2">
                             <Label>Destination*</Label>
-                            <Select v-model="form.destination" @update:model-value="checkAllItemsForDestination">
-                                <SelectTrigger :class="{ 'border-red-500': form.errors.destination }">
-                                    <SelectValue placeholder="Select destination" />
+                            <Select
+                                v-model="form.destination"
+                                @update:model-value="
+                                    checkAllItemsForDestination
+                                "
+                            >
+                                <SelectTrigger
+                                    :class="{
+                                        'border-red-500':
+                                            form.errors.destination,
+                                    }"
+                                >
+                                    <SelectValue
+                                        placeholder="Select destination"
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem v-for="dest in destinations" :key="dest" :value="dest">
+                                    <SelectItem
+                                        v-for="dest in destinations"
+                                        :key="dest"
+                                        :value="dest"
+                                    >
                                         {{ dest }}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <p v-if="form.errors.destination" class="text-sm text-red-500">
+                            <p
+                                v-if="form.errors.destination"
+                                class="text-sm text-red-500"
+                            >
                                 {{ form.errors.destination }}
                             </p>
                         </div>
@@ -332,21 +398,35 @@ const isFormValid = computed(() => {
                             </Button>
                         </div>
 
-                        <div v-if="form.items.length === 0" class="rounded-lg border-2 border-dashed p-8 text-center">
-                            <p class="text-muted-foreground">No items added yet. Click "Add Item" to start.</p>
+                        <div
+                            v-if="form.items.length === 0"
+                            class="rounded-lg border-2 border-dashed p-8 text-center"
+                        >
+                            <p class="text-muted-foreground">
+                                No items added yet. Click "Add Item" to start.
+                            </p>
                         </div>
 
                         <div v-else class="space-y-3">
                             <div
                                 v-for="(item, index) in form.items"
                                 :key="item.id"
-                                :ref="(el) => (itemRefs[`item-${item.id}`] = el as HTMLElement)"
+                                :ref="
+                                    (el) =>
+                                        (itemRefs[`item-${item.id}`] =
+                                            el as HTMLElement)
+                                "
                                 class="rounded-lg border p-4"
-                                :class="{ 'border-red-500 bg-red-50 dark:bg-red-950/20': item.isHighlighted }"
+                                :class="{
+                                    'border-red-500 bg-red-50 dark:bg-red-950/20':
+                                        item.isHighlighted,
+                                }"
                             >
                                 <div class="flex gap-4">
                                     <div class="flex-1 space-y-2">
-                                        <div class="flex items-center justify-between">
+                                        <div
+                                            class="flex items-center justify-between"
+                                        >
                                             <Label>Part*</Label>
                                             <Button
                                                 type="button"
@@ -361,36 +441,63 @@ const isFormValid = computed(() => {
                                         </div>
                                         <Select
                                             v-model="item.part_id"
-                                            @update:model-value="checkDuplicatePart(index, $event)"
+                                            @update:model-value="
+                                                checkDuplicatePart(
+                                                    index,
+                                                    $event,
+                                                )
+                                            "
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select part" />
+                                                <SelectValue
+                                                    placeholder="Select part"
+                                                />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <div class="sticky top-0 z-10 bg-popover p-2 pb-1">
+                                                <div
+                                                    class="sticky top-0 z-10 bg-popover p-2 pb-1"
+                                                >
                                                     <div class="relative">
-                                                        <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                        <Search
+                                                            class="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground"
+                                                        />
                                                         <Input
-                                                            v-model="partSearchQueries[item.id]"
+                                                            v-model="
+                                                                partSearchQueries[
+                                                                    item.id
+                                                                ]
+                                                            "
                                                             placeholder="Search parts..."
-                                                            class="pl-8 h-9"
+                                                            class="h-9 pl-8"
                                                             @keydown.enter.prevent
                                                         />
                                                     </div>
                                                 </div>
-                                                <div class="max-h-60 overflow-y-auto">
+                                                <div
+                                                    class="max-h-60 overflow-y-auto"
+                                                >
                                                     <SelectItem
-                                                        v-for="part in getFilteredPartsForItem(item.id)"
+                                                        v-for="part in getFilteredPartsForItem(
+                                                            item.id,
+                                                        )"
                                                         :key="part.id"
                                                         :value="part.id"
                                                     >
-                                                        {{ part.part_number }} - {{ part.part_name }}
-                                                        <span class="text-muted-foreground">
-                                                            (Stock: {{ part.stock }})
+                                                        {{ part.part_number }} -
+                                                        {{ part.part_name }}
+                                                        <span
+                                                            class="text-muted-foreground"
+                                                        >
+                                                            (Stock:
+                                                            {{ part.stock }})
                                                         </span>
                                                     </SelectItem>
                                                     <div
-                                                        v-if="getFilteredPartsForItem(item.id).length === 0"
+                                                        v-if="
+                                                            getFilteredPartsForItem(
+                                                                item.id,
+                                                            ).length === 0
+                                                        "
                                                         class="py-6 text-center text-sm text-muted-foreground"
                                                     >
                                                         No parts found
@@ -400,16 +507,18 @@ const isFormValid = computed(() => {
                                         </Select>
                                     </div>
 
-                                    <div class="flex items-center space-x-2 pt-7">
+                                    <div
+                                        class="flex items-center space-x-2 pt-7"
+                                    >
                                         <input
                                             :id="`urgent-${item.id}`"
                                             v-model="item.is_urgent"
                                             type="checkbox"
-                                            class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+                                            class="h-4 w-4 cursor-pointer rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2"
                                         />
                                         <Label
                                             :for="`urgent-${item.id}`"
-                                            class="cursor-pointer text-sm font-medium leading-none"
+                                            class="cursor-pointer text-sm leading-none font-medium"
                                         >
                                             Urgent
                                         </Label>
@@ -429,7 +538,10 @@ const isFormValid = computed(() => {
                             </div>
                         </div>
 
-                        <p v-if="form.errors.items" class="text-sm text-red-500">
+                        <p
+                            v-if="form.errors.items"
+                            class="text-sm text-red-500"
+                        >
                             {{ form.errors.items }}
                         </p>
                     </div>

@@ -9,6 +9,7 @@ use App\Models\Receivings;
 use App\Services\AuthorizationService;
 use App\Services\ReceivingService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,9 +20,9 @@ class ReceivingsController extends Controller
         private AuthorizationService $authService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $receivings = Receivings::query()
+        $query = Receivings::query()
             ->with(['receivedBy:id,name', 'items.part:id,part_number,part_name,stock'])
             ->select([
                 'id',
@@ -31,13 +32,27 @@ class ReceivingsController extends Controller
                 'status',
                 'is_gr',
                 'created_at',
-            ])
+            ]);
+
+        // Server-side search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('doc_number', 'LIKE', "%{$search}%")
+                    ->orWhereHas('receivedBy', function ($q) use ($search) {
+                        $q->where('name', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        $receivings = $query
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('receivings/Index', [
             'receivings' => $receivings,
+            'filters' => $request->only(['search']),
         ]);
     }
 

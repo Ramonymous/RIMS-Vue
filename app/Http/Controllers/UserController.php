@@ -6,21 +6,34 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class UserController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $users = User::query()
-            ->select(['id', 'name', 'email', 'permissions', 'created_at'])
+        $query = User::query()
+            ->select(['id', 'name', 'email', 'permissions', 'created_at']);
+
+        // Server-side search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $users = $query
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('users/Index', [
             'users' => $users,
+            'filters' => $request->only(['search']),
         ]);
     }
 

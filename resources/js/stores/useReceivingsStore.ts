@@ -1,6 +1,6 @@
-import { ref, computed, shallowRef, type Ref } from 'vue';
-import type { Receiving } from '@/composables/useReceivings';
+import { ref, computed, shallowRef } from 'vue';
 import { useCache } from '@/composables/useCache';
+import type { Receiving } from '@/composables/useReceivings';
 
 /**
  * Receivings Store - Global state and caching for receivings data
@@ -9,29 +9,31 @@ import { useCache } from '@/composables/useCache';
 export function useReceivingsStore() {
     // Cache for receivings data (3 minutes TTL - more dynamic data)
     const cache = useCache<Receiving[]>({ ttl: 3 * 60 * 1000 });
-    
+
     // Local state - use shallowRef for better performance
     const receivings = shallowRef<Receiving[]>([]);
     const isLoading = ref(false);
     const lastFetch = ref<number>(0);
 
     // Computed
-    const activeReceivings = computed(() => 
-        receivings.value.filter((r) => r.status !== 'cancelled')
+    const activeReceivings = computed(() =>
+        receivings.value.filter((r) => r.status !== 'cancelled'),
     );
-    const pendingReceivings = computed(() => 
-        receivings.value.filter((r) => r.status === 'draft')
+    const pendingReceivings = computed(() =>
+        receivings.value.filter((r) => r.status === 'draft'),
     );
-    const completedReceivings = computed(() => 
-        receivings.value.filter((r) => r.status === 'completed')
+    const completedReceivings = computed(() =>
+        receivings.value.filter((r) => r.status === 'completed'),
     );
-    const grConfirmedReceivings = computed(() => 
-        receivings.value.filter((r) => r.is_gr)
+    const grConfirmedReceivings = computed(() =>
+        receivings.value.filter((r) => r.is_gr),
     );
 
     // Cache key generator
     const getCacheKey = (filters?: Record<string, any>) => {
-        return filters ? `receivings-${JSON.stringify(filters)}` : 'receivings-all';
+        return filters
+            ? `receivings-${JSON.stringify(filters)}`
+            : 'receivings-all';
     };
 
     // Get cached receivings or current state
@@ -42,7 +44,10 @@ export function useReceivingsStore() {
     };
 
     // Set receivings with caching
-    const setReceivings = (newReceivings: Receiving[], filters?: Record<string, any>) => {
+    const setReceivings = (
+        newReceivings: Receiving[],
+        filters?: Record<string, any>,
+    ) => {
         receivings.value = newReceivings;
         const cacheKey = getCacheKey(filters);
         cache.set(cacheKey, newReceivings);
@@ -60,12 +65,18 @@ export function useReceivingsStore() {
     };
 
     // Optimistic update
-    const updateReceivingOptimistic = (id: string, updates: Partial<Receiving>) => {
+    const updateReceivingOptimistic = (
+        id: string,
+        updates: Partial<Receiving>,
+    ) => {
         const index = receivings.value.findIndex((r) => r.id === id);
         if (index !== -1) {
             const original = { ...receivings.value[index] };
-            receivings.value[index] = { ...receivings.value[index], ...updates };
-            
+            receivings.value[index] = {
+                ...receivings.value[index],
+                ...updates,
+            };
+
             return {
                 revert: () => {
                     receivings.value[index] = original;
@@ -97,13 +108,13 @@ export function useReceivingsStore() {
         receivings,
         isLoading,
         lastFetch,
-        
+
         // Computed
         activeReceivings,
         pendingReceivings,
         completedReceivings,
         grConfirmedReceivings,
-        
+
         // Methods
         getReceivings,
         setReceivings,

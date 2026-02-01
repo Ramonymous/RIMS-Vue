@@ -12,7 +12,9 @@ export interface DialogState<T = any> {
  * Composable for dialog/modal state management
  * Handles open/close state and associated data
  */
-export function useDialog<T = any>(initialData: T | null = null): DialogState<T> {
+export function useDialog<T = any>(
+    initialData: T | null = null,
+): DialogState<T> {
     const isOpen = ref(false);
     const data = ref<T | null>(initialData) as Ref<T | null>;
 

@@ -15,7 +15,6 @@ interface AnnouncementState {
     permissionGranted: boolean;
 }
 
-const REMINDER_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const STORAGE_KEY = 'rims_announced_items';
 const MAX_ANNOUNCED_HISTORY = 1000; // Prevent localStorage bloat
 const MAX_SPELLED_CACHE = 100; // Limit spelling cache size
@@ -27,9 +26,6 @@ const state = ref<AnnouncementState>({
     isInitialized: false,
     permissionGranted: false,
 });
-
-// Current speech instance for interruption
-let currentSpeech: SpeechSynthesisUtterance | null = null;
 
 // Cache for spelled part numbers (performance optimization)
 const spelledCache = new Map<string, string>();
@@ -44,7 +40,7 @@ function spellPartNumber(partNumber: string): string {
     if (spelledCache.has(partNumber)) {
         return spelledCache.get(partNumber)!;
     }
-    
+
     const spelled = partNumber
         .split('')
         .map((char) => {
@@ -55,25 +51,28 @@ function spellPartNumber(partNumber: string): string {
             if (char === ' ') return ''; // Silent space
             return char;
         })
-        .filter(char => char !== '') // Remove empty strings
+        .filter((char) => char !== '') // Remove empty strings
         .join(' ');
-    
+
     // Cache the result
     spelledCache.set(partNumber, spelled);
-    
+
     // Prevent cache from growing too large (FIFO)
     if (spelledCache.size > MAX_SPELLED_CACHE) {
         const firstKey = spelledCache.keys().next().value;
         if (firstKey) spelledCache.delete(firstKey);
     }
-    
+
     return spelled;
 }
 
 /**
  * Speak text using Web Speech API
  */
-function speak(text: string, options: { urgent?: boolean; onEnd?: () => void } = {}): Promise<void> {
+function speak(
+    text: string,
+    options: { urgent?: boolean; onEnd?: () => void } = {},
+): Promise<void> {
     return new Promise((resolve, reject) => {
         if (!state.value.permissionGranted) {
             resolve();
@@ -128,16 +127,16 @@ function loadAnnouncedIds(): void {
 function saveAnnouncedIds(): void {
     try {
         const idsArray = Array.from(state.value.announcedIds);
-        
+
         // Keep only recent IDs to prevent localStorage bloat
         const recentIds = idsArray.slice(-MAX_ANNOUNCED_HISTORY);
-        
+
         // Update state with trimmed IDs
         if (recentIds.length < idsArray.length) {
             state.value.announcedIds.clear();
-            recentIds.forEach(id => state.value.announcedIds.add(id));
+            recentIds.forEach((id) => state.value.announcedIds.add(id));
         }
-        
+
         localStorage.setItem(STORAGE_KEY, JSON.stringify(recentIds));
     } catch (error) {
         console.error('Failed to save announced IDs:', error);
@@ -222,7 +221,7 @@ async function remindItem(item: RequestItem): Promise<void> {
     const lastReminder = state.value.lastReminderTime.get(item.id) || 0;
 
     // Throttle reminders to once per 5 minutes
-    if (now - lastReminder < (5 * 60 * 1000)) return;
+    if (now - lastReminder < 5 * 60 * 1000) return;
 
     state.value.lastReminderTime.set(item.id, now);
 

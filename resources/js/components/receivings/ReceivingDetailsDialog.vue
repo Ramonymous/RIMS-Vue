@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -8,7 +9,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import type { Receiving } from '@/composables/useReceivings';
 
 interface Props {
@@ -22,7 +22,7 @@ interface Emits {
     (e: 'update:open', value: boolean): void;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 const emit = defineEmits<Emits>();
 </script>
 
@@ -39,10 +39,17 @@ const emit = defineEmits<Emits>();
                 <div class="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <span class="font-medium">Status:</span>
-                        <Badge :variant="getStatusVariant(receiving.status)" class="ml-2">
+                        <Badge
+                            :variant="getStatusVariant(receiving.status)"
+                            class="ml-2"
+                        >
                             {{ receiving.status }}
                         </Badge>
-                        <Badge v-if="receiving.is_gr" variant="default" class="ml-2">
+                        <Badge
+                            v-if="receiving.is_gr"
+                            variant="default"
+                            class="ml-2"
+                        >
                             GR Confirmed
                         </Badge>
                     </div>
@@ -57,8 +64,10 @@ const emit = defineEmits<Emits>();
                 </div>
 
                 <div class="border-t pt-4">
-                    <h4 class="mb-3 font-medium">Items ({{ receiving.items.length }})</h4>
-                    <div class="space-y-2 max-h-96 overflow-y-auto">
+                    <h4 class="mb-3 font-medium">
+                        Items ({{ receiving.items.length }})
+                    </h4>
+                    <div class="max-h-96 space-y-2 overflow-y-auto">
                         <div
                             v-for="(item, index) in receiving.items"
                             :key="index"
@@ -66,13 +75,17 @@ const emit = defineEmits<Emits>();
                         >
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
-                                    <p class="font-medium">{{ item.part.part_number }}</p>
+                                    <p class="font-medium">
+                                        {{ item.part.part_number }}
+                                    </p>
                                     <p class="text-sm text-muted-foreground">
                                         {{ item.part.part_name }}
                                     </p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-sm font-medium">Qty: {{ item.qty }}</p>
+                                    <p class="text-sm font-medium">
+                                        Qty: {{ item.qty }}
+                                    </p>
                                     <p class="text-xs text-muted-foreground">
                                         Stock: {{ item.part.stock }}
                                     </p>

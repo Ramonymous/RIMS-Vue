@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
 import { ScanLine, Check, X } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
+import QRScanner from '@/components/QRScanner.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -9,11 +12,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import QRScanner from '@/components/QRScanner.vue';
 
 type Props = {
     open: boolean;
@@ -28,7 +28,12 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
     (e: 'update:open', value: boolean): void;
-    (e: 'confirmed', itemId: string, scannedPartNumber: string, qty: number): void;
+    (
+        e: 'confirmed',
+        itemId: string,
+        scannedPartNumber: string,
+        qty: number,
+    ): void;
 }>();
 
 const showQRScanner = ref(false);
@@ -41,7 +46,7 @@ const validatedPartNumber = ref<string>('');
 
 function handleClose() {
     if (isProcessing.value) return;
-    
+
     showQRScanner.value = false;
     manualInput.value = '';
     step.value = 'validate';
@@ -74,17 +79,21 @@ function handleManualConfirm() {
 
 function validatePartNumber(scannedPartNumber: string) {
     error.value = null;
-    
+
     // Normalize both part numbers for comparison (case-insensitive, trim whitespace)
-    const normalizedScanned = scannedPartNumber.toUpperCase().replace(/\s+/g, '');
-    const normalizedExpected = props.partNumber.toUpperCase().replace(/\s+/g, '');
-    
+    const normalizedScanned = scannedPartNumber
+        .toUpperCase()
+        .replace(/\s+/g, '');
+    const normalizedExpected = props.partNumber
+        .toUpperCase()
+        .replace(/\s+/g, '');
+
     if (normalizedScanned !== normalizedExpected) {
         error.value = `Part number mismatch! Expected: ${props.partNumber}, Got: ${scannedPartNumber}`;
         manualInput.value = '';
         return;
     }
-    
+
     // Match confirmed, move to quantity step
     validatedPartNumber.value = scannedPartNumber;
     step.value = 'quantity';
@@ -92,65 +101,82 @@ function validatePartNumber(scannedPartNumber: string) {
 
 function handleConfirmSupply() {
     error.value = null;
-    
+
     // Validate quantity
     if (!qty.value || qty.value < 1) {
         error.value = 'Please enter a valid quantity (minimum 1)';
         return;
     }
-    
+
     if (qty.value > props.availableStock) {
         error.value = `Quantity cannot exceed available stock (${props.availableStock})`;
         return;
     }
-    
+
     // Emit with validated part number and quantity
     isProcessing.value = true;
     emit('confirmed', props.itemId, validatedPartNumber.value, qty.value);
 }
 
 // Reset state when dialog closes
-watch(() => props.open, (newValue) => {
-    if (!newValue) {
-        showQRScanner.value = false;
-        manualInput.value = '';
-        qty.value = 1;
-        step.value = 'validate';
-        validatedPartNumber.value = '';
-        error.value = null;
-        isProcessing.value = false;
-    } else {
-        // Set default quantity to requested quantity when opening
-        qty.value = props.requestedQty;
-        step.value = 'validate';
-    }
-});
+watch(
+    () => props.open,
+    (newValue) => {
+        if (!newValue) {
+            showQRScanner.value = false;
+            manualInput.value = '';
+            qty.value = 1;
+            step.value = 'validate';
+            validatedPartNumber.value = '';
+            error.value = null;
+            isProcessing.value = false;
+        } else {
+            // Set default quantity to requested quantity when opening
+            qty.value = props.requestedQty;
+            step.value = 'validate';
+        }
+    },
+);
 </script>
 
 <template>
     <Dialog :open="open" @update:open="handleClose">
         <DialogContent class="sm:max-w-[500px]">
             <DialogHeader>
-                <DialogTitle>{{ step === 'validate' ? 'Confirm Part Number' : 'Enter Supply Quantity' }}</DialogTitle>
+                <DialogTitle>{{
+                    step === 'validate'
+                        ? 'Confirm Part Number'
+                        : 'Enter Supply Quantity'
+                }}</DialogTitle>
                 <DialogDescription>
-                    {{ step === 'validate' 
-                        ? 'Scan or enter the part number to verify' 
-                        : 'Enter the quantity to supply' 
+                    {{
+                        step === 'validate'
+                            ? 'Scan or enter the part number to verify'
+                            : 'Enter the quantity to supply'
                     }}
                 </DialogDescription>
             </DialogHeader>
 
             <div class="space-y-4 py-4">
                 <!-- Expected Part Info -->
-                <div class="rounded-lg border bg-muted/50 p-4 space-y-2">
-                    <div class="text-sm font-medium text-muted-foreground">Expected Part</div>
-                    <div class="font-semibold text-lg">{{ partNumber }}</div>
-                    <div class="text-sm text-muted-foreground">{{ partName }}</div>
-                    
+                <div class="space-y-2 rounded-lg border bg-muted/50 p-4">
+                    <div class="text-sm font-medium text-muted-foreground">
+                        Expected Part
+                    </div>
+                    <div class="text-lg font-semibold">{{ partNumber }}</div>
+                    <div class="text-sm text-muted-foreground">
+                        {{ partName }}
+                    </div>
+
                     <!-- Show validated checkmark in step 2 -->
-                    <div v-if="step === 'quantity'" class="mt-2 flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <div
+                        v-if="step === 'quantity'"
+                        class="mt-2 flex items-center gap-2 text-green-600 dark:text-green-400"
+                    >
                         <Check class="h-4 w-4" />
-                        <span class="text-sm font-medium">Part number verified</span>
+                        <span class="text-sm font-medium"
+                            >Part number verified</span
+                        >
                     </div>
                 </div>
 
@@ -178,7 +204,10 @@ watch(() => props.open, (newValue) => {
 
                     <!-- Manual Input -->
                     <div class="space-y-2">
-                        <Label for="manual-part" class="text-xs text-muted-foreground">
+                        <Label
+                            for="manual-part"
+                            class="text-xs text-muted-foreground"
+                        >
                             Or enter manually
                         </Label>
                         <div class="flex gap-2">
@@ -211,7 +240,10 @@ watch(() => props.open, (newValue) => {
 
                     <!-- Quantity Input -->
                     <div class="space-y-2">
-                        <Label for="qty">Supply Quantity <span class="text-destructive">*</span></Label>
+                        <Label for="qty"
+                            >Supply Quantity
+                            <span class="text-destructive">*</span></Label
+                        >
                         <Input
                             id="qty"
                             v-model.number="qty"
@@ -239,12 +271,16 @@ watch(() => props.open, (newValue) => {
                 >
                     Cancel
                 </Button>
-                
+
                 <template v-else-if="step === 'quantity'">
                     <Button
                         type="button"
                         variant="outline"
-                        @click="step = 'validate'; error = null; manualInput = ''"
+                        @click="
+                            step = 'validate';
+                            error = null;
+                            manualInput = '';
+                        "
                         :disabled="isProcessing"
                     >
                         Back
@@ -252,7 +288,12 @@ watch(() => props.open, (newValue) => {
                     <Button
                         type="button"
                         @click="handleConfirmSupply"
-                        :disabled="!qty || qty < 1 || qty > availableStock || isProcessing"
+                        :disabled="
+                            !qty ||
+                            qty < 1 ||
+                            qty > availableStock ||
+                            isProcessing
+                        "
                     >
                         Confirm Supply
                     </Button>

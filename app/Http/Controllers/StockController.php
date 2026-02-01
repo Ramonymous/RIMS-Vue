@@ -18,9 +18,9 @@ class StockController extends Controller
         private AuthorizationService $authService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $parts = Parts::query()
+        $partsQuery = Parts::query()
             ->select([
                 'id',
                 'part_number',
@@ -28,12 +28,28 @@ class StockController extends Controller
                 'stock',
                 'is_active',
                 'created_at',
-            ])
+            ]);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $partsQuery->where(function ($query) use ($search) {
+                $query->where('part_number', 'LIKE', "%{$search}%")
+                    ->orWhere('part_name', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($request->filled('status') && $request->status !== 'all') {
+            $partsQuery->where('is_active', $request->status === 'active');
+        }
+
+        $parts = $partsQuery
             ->orderBy('part_number')
             ->paginate(50)
             ->withQueryString();
 
-        $movements = PartMovements::query()
+        $movementsQuery = PartMovements::query()
             ->with([
                 'part:id,part_number,part_name',
                 'reference',
@@ -48,14 +64,40 @@ class StockController extends Controller
                 'reference_type',
                 'reference_id',
                 'created_at',
-            ])
+            ]);
+
+        // Movement search filter
+        if ($request->filled('movement_search')) {
+            $search = $request->movement_search;
+            $movementsQuery->whereHas('part', function ($query) use ($search) {
+                $query->where('part_number', 'LIKE', "%{$search}%")
+                    ->orWhere('part_name', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Movement type filter
+        if ($request->filled('movement_type') && $request->movement_type !== 'all') {
+            $movementsQuery->where('type', $request->movement_type);
+        }
+
+        // Movement date range filter
+        if ($request->filled('movement_start_date')) {
+            $movementsQuery->whereDate('created_at', '>=', $request->movement_start_date);
+        }
+
+        if ($request->filled('movement_end_date')) {
+            $movementsQuery->whereDate('created_at', '<=', $request->movement_end_date);
+        }
+
+        $movements = $movementsQuery
             ->latest()
-            ->paginate(50)
+            ->paginate(50, ['*'], 'movements_page')
             ->withQueryString();
 
         return Inertia::render('stock/Index', [
             'parts' => $parts,
             'movements' => $movements,
+            'filters' => $request->only(['search', 'status', 'movement_search', 'movement_type', 'movement_start_date', 'movement_end_date']),
         ]);
     }
 

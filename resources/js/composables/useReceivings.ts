@@ -19,14 +19,14 @@ export interface ReceivingsState {
     cancelDialog: DialogState<Receiving>;
     grDialog: DialogState<Receiving>;
     viewDialog: DialogState<Receiving>;
-    
+
     // Filter
     filter: FilterState<Receiving>;
-    
+
     // Actions
     cancel: (receiving: Receiving) => void;
     updateGrStatus: (receiving: Receiving) => void;
-    
+
     // Utilities
     getStatusVariant: (status: string) => string;
     formatDate: (date: string) => string;
@@ -37,37 +37,56 @@ export interface ReceivingsState {
  * Composable for receivings business logic
  * Handles all receiving-related operations and state
  */
-export function useReceivings(receivings: ComputedRef<Receiving[]>): ReceivingsState {
+export function useReceivings(
+    receivings: ComputedRef<Receiving[]>,
+): ReceivingsState {
     // Dialog states
     const cancelDialog = useDialog<Receiving>();
     const grDialog = useDialog<Receiving>();
     const viewDialog = useDialog<Receiving>();
 
     // Filter state
-    const filter = useFilter(receivings, ['doc_number', 'received_by', 'status']);
+    const filter = useFilter(receivings, [
+        'doc_number',
+        'received_by',
+        'status',
+    ]);
 
     // Actions
     const cancel = (receiving: Receiving) => {
-        router.post(`/receivings/${receiving.id}/cancel`, {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                cancelDialog.close();
+        router.post(
+            `/receivings/${receiving.id}/cancel`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    cancelDialog.close();
+                },
             },
-        });
+        );
     };
 
     const updateGrStatus = (receiving: Receiving) => {
-        router.post(`/receivings/${receiving.id}/gr`, {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                grDialog.close();
+        router.post(
+            `/receivings/${receiving.id}/gr`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    grDialog.close();
+                },
             },
-        });
+        );
     };
 
     // Utilities
-    const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
-        const variants: Record<string, 'default' | 'destructive' | 'outline' | 'secondary'> = {
+    const getStatusVariant = (
+        status: string,
+    ): 'default' | 'destructive' | 'outline' | 'secondary' => {
+        const variants: Record<
+            string,
+            'default' | 'destructive' | 'outline' | 'secondary'
+        > = {
             completed: 'default',
             draft: 'secondary',
             cancelled: 'destructive',

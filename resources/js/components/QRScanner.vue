@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { NotFoundException } from '@zxing/library';
 import { Camera, CameraOff, ScanLine } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
+import { onUnmounted, ref, watch } from 'vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 type Props = {
     isActive: boolean;
@@ -30,30 +30,36 @@ const scannerControls = ref<{ stop: () => void } | null>(null);
 async function getVideoDevices() {
     try {
         // Request camera permissions first
-        await navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
+        await navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then((stream) => {
                 // Stop the stream immediately, we just needed permission
-                stream.getTracks().forEach(track => track.stop());
+                stream.getTracks().forEach((track) => track.stop());
             });
 
         const mediaDevices = await navigator.mediaDevices.enumerateDevices();
-        devices.value = mediaDevices.filter(device => device.kind === 'videoinput');
-        
+        devices.value = mediaDevices.filter(
+            (device) => device.kind === 'videoinput',
+        );
+
         if (devices.value.length === 0) {
             error.value = 'No camera devices found';
             return;
         }
-        
+
         // Prefer rear camera on mobile
-        const rearCamera = devices.value.find(device => 
-            device.label.toLowerCase().includes('back') || 
-            device.label.toLowerCase().includes('rear') ||
-            device.label.toLowerCase().includes('environment')
+        const rearCamera = devices.value.find(
+            (device) =>
+                device.label.toLowerCase().includes('back') ||
+                device.label.toLowerCase().includes('rear') ||
+                device.label.toLowerCase().includes('environment'),
         );
-        
-        selectedDeviceId.value = rearCamera?.deviceId || devices.value[0]?.deviceId || null;
+
+        selectedDeviceId.value =
+            rearCamera?.deviceId || devices.value[0]?.deviceId || null;
     } catch (err) {
-        error.value = 'Unable to access camera. Please grant camera permissions.';
+        error.value =
+            'Unable to access camera. Please grant camera permissions.';
         console.error('Error getting video devices:', err);
     }
 }
@@ -79,7 +85,7 @@ async function startScanning() {
         isScanning.value = true;
 
         codeReader.value = new BrowserMultiFormatReader();
-        
+
         const controls = await codeReader.value.decodeFromVideoDevice(
             selectedDeviceId.value,
             videoRef.value,
@@ -94,13 +100,13 @@ async function startScanning() {
                     if (scannedValue) {
                         // Start cooldown immediately
                         isInCooldown.value = true;
-                        
+
                         // Emit the scanned value
                         emit('scanned', scannedValue);
-                        
+
                         // Stop scanning
                         stopScanning();
-                        
+
                         // Set 5-second cooldown timer
                         cooldownTimer.value = window.setTimeout(() => {
                             isInCooldown.value = false;
@@ -108,17 +114,18 @@ async function startScanning() {
                         }, 5000);
                     }
                 }
-                
+
                 if (err && !(err instanceof NotFoundException)) {
                     console.error('Scan error:', err);
                 }
-            }
+            },
         );
 
         // Store controls for proper cleanup
         scannerControls.value = controls;
     } catch (err: any) {
-        error.value = err?.message || 'Failed to start camera. Please check permissions.';
+        error.value =
+            err?.message || 'Failed to start camera. Please check permissions.';
         console.error('Error starting scanner:', err);
         isScanning.value = false;
     }
@@ -139,7 +146,7 @@ function stopScanning() {
     // Manually stop all media stream tracks
     if (videoRef.value && videoRef.value.srcObject) {
         const stream = videoRef.value.srcObject as MediaStream;
-        stream.getTracks().forEach(track => {
+        stream.getTracks().forEach((track) => {
             track.stop();
         });
         videoRef.value.srcObject = null;
@@ -151,13 +158,13 @@ function stopScanning() {
 
 function handleClose() {
     stopScanning();
-    
+
     // Clear cooldown timer if exists
     if (cooldownTimer.value) {
         clearTimeout(cooldownTimer.value);
         cooldownTimer.value = null;
     }
-    
+
     emit('close');
 }
 
@@ -167,20 +174,29 @@ async function switchCamera() {
 }
 
 // Watch for active state changes - ONLY way to start scanning
-watch(() => props.isActive, async (active) => {
-    if (active && !isScanning.value && !codeReader.value && !scannerControls.value) {
-        // Add small delay to ensure video element is mounted
-        await new Promise(resolve => setTimeout(resolve, 100));
-        await getVideoDevices();
-        await startScanning();
-    } else if (!active && isScanning.value) {
-        stopScanning();
-    }
-}, { immediate: true });
+watch(
+    () => props.isActive,
+    async (active) => {
+        if (
+            active &&
+            !isScanning.value &&
+            !codeReader.value &&
+            !scannerControls.value
+        ) {
+            // Add small delay to ensure video element is mounted
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            await getVideoDevices();
+            await startScanning();
+        } else if (!active && isScanning.value) {
+            stopScanning();
+        }
+    },
+    { immediate: true },
+);
 
 onUnmounted(() => {
     stopScanning();
-    
+
     // Clear cooldown timer on unmount
     if (cooldownTimer.value) {
         clearTimeout(cooldownTimer.value);
@@ -190,10 +206,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+    >
         <div class="relative w-full max-w-2xl rounded-lg bg-background p-4">
             <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-lg font-semibold flex items-center gap-2">
+                <h3 class="flex items-center gap-2 text-lg font-semibold">
                     <ScanLine class="h-5 w-5" />
                     Scan QR Code
                 </h3>
@@ -206,45 +224,70 @@ onUnmounted(() => {
                 <AlertDescription>{{ error }}</AlertDescription>
             </Alert>
 
-            <div class="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
+            <div
+                class="relative aspect-video w-full overflow-hidden rounded-lg bg-muted"
+            >
                 <video
                     ref="videoRef"
                     class="h-full w-full object-cover"
                     autoplay
                     playsinline
                 />
-                
+
                 <!-- Scanning overlay -->
-                <div v-if="isScanning" class="absolute inset-0 flex items-center justify-center">
-                    <div class="relative h-48 w-48 border-4 border-primary rounded-lg">
-                        <div class="absolute inset-0 border-t-4 border-primary animate-scan" />
+                <div
+                    v-if="isScanning"
+                    class="absolute inset-0 flex items-center justify-center"
+                >
+                    <div
+                        class="relative h-48 w-48 rounded-lg border-4 border-primary"
+                    >
+                        <div
+                            class="animate-scan absolute inset-0 border-t-4 border-primary"
+                        />
                     </div>
                 </div>
 
                 <!-- Loading state -->
-                <div v-if="!isScanning && !error" class="absolute inset-0 flex items-center justify-center">
+                <div
+                    v-if="!isScanning && !error"
+                    class="absolute inset-0 flex items-center justify-center"
+                >
                     <div class="flex flex-col items-center gap-2">
-                        <Camera class="h-12 w-12 animate-pulse text-muted-foreground" />
-                        <p class="text-sm text-muted-foreground">Initializing camera...</p>
+                        <Camera
+                            class="h-12 w-12 animate-pulse text-muted-foreground"
+                        />
+                        <p class="text-sm text-muted-foreground">
+                            Initializing camera...
+                        </p>
                     </div>
                 </div>
             </div>
 
             <div class="mt-4 space-y-2">
-                <p class="text-sm text-muted-foreground text-center">
+                <p class="text-center text-sm text-muted-foreground">
                     Position the QR code within the frame
                 </p>
-                
+
                 <!-- Device selector if multiple cameras -->
-                <div v-if="devices.length > 1" class="flex justify-center gap-2">
+                <div
+                    v-if="devices.length > 1"
+                    class="flex justify-center gap-2"
+                >
                     <Button
                         v-for="(device, index) in devices"
                         :key="device.deviceId"
                         variant="outline"
                         size="sm"
-                        :class="{ 'bg-primary text-primary-foreground': selectedDeviceId === device.deviceId }"
+                        :class="{
+                            'bg-primary text-primary-foreground':
+                                selectedDeviceId === device.deviceId,
+                        }"
                         :disabled="isInCooldown"
-                        @click="selectedDeviceId = device.deviceId; switchCamera();"
+                        @click="
+                            selectedDeviceId = device.deviceId;
+                            switchCamera();
+                        "
                     >
                         <Camera class="mr-2 h-3 w-3" />
                         Camera {{ index + 1 }}

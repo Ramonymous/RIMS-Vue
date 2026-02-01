@@ -1,11 +1,11 @@
 import { defineAsyncComponent, type Component } from 'vue';
-import LoadingState from '@/components/ui/loading-state.vue';
 import ErrorState from '@/components/ui/error-state.vue';
+import LoadingState from '@/components/ui/loading-state.vue';
 
 /**
  * Utility for lazy loading components with loading and error states
  * Improves initial bundle size and performance
- * 
+ *
  * Usage:
  * const HeavyComponent = lazyLoad(() => import('./HeavyComponent.vue'));
  */
@@ -21,7 +21,7 @@ export function lazyLoad(loader: () => Promise<Component>) {
 
 /**
  * Lazy load with custom loading/error components
- * 
+ *
  * Usage:
  * const Chart = lazyLoadWithCustom(
  *     () => import('./Chart.vue'),
@@ -32,7 +32,7 @@ export function lazyLoad(loader: () => Promise<Component>) {
 export function lazyLoadWithCustom(
     loader: () => Promise<Component>,
     loadingComponent?: Component,
-    errorComponent?: Component
+    errorComponent?: Component,
 ) {
     return defineAsyncComponent({
         loader,
@@ -59,13 +59,15 @@ export function lazyLoadInstant(loader: () => Promise<Component>) {
 /**
  * Preload a component for better UX
  * Useful for components that will likely be needed soon
- * 
+ *
  * Usage:
  * onMounted(() => {
  *     preloadComponent(() => import('./HeavyModal.vue'));
  * });
  */
-export async function preloadComponent(loader: () => Promise<Component>): Promise<void> {
+export async function preloadComponent(
+    loader: () => Promise<Component>,
+): Promise<void> {
     try {
         await loader();
     } catch (error) {

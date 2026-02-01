@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/vue3';
-import { computed, ref, type ComputedRef, type Ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import { useDialog, type DialogState } from './useDialog';
 import { useFilter, type FilterState } from './useFilter';
 
@@ -37,19 +37,19 @@ export interface PartsState {
     editDialog: DialogState<Part>;
     deleteDialog: DialogState<Part>;
     importDialog: DialogState;
-    
+
     // Filter
     filter: FilterState<Part>;
-    
+
     // File upload
     importFile: Ref<File | null>;
     fileInputRef: Ref<HTMLInputElement | null>;
-    
+
     // Actions
     deletePart: (part: Part) => void;
     exportTemplate: () => void;
     handleImport: () => void;
-    
+
     // Utilities
     getStockBadgeVariant: (stock: number) => string;
     formatDate: (date: string) => string;
@@ -67,7 +67,13 @@ export function useParts(parts: ComputedRef<Part[]>): PartsState {
     const importDialog = useDialog();
 
     // Filter state
-    const filter = useFilter(parts, ['part_number', 'part_name', 'customer_code', 'supplier_code', 'model']);
+    const filter = useFilter(parts, [
+        'part_number',
+        'part_name',
+        'customer_code',
+        'supplier_code',
+        'model',
+    ]);
 
     // File upload state
     const importFile = ref<File | null>(null);

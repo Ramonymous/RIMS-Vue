@@ -87,10 +87,10 @@ function submit() {
 
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox 
-                            id="remember" 
+                        <Checkbox
+                            id="remember"
                             v-model:checked="form.remember"
-                            :tabindex="3" 
+                            :tabindex="3"
                         />
                         <span>Remember me</span>
                     </Label>

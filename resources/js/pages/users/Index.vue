@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { useDebounceFn } from '@vueuse/core';
 import { UsersRound, Plus, Pencil, Trash2 } from 'lucide-vue-next';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -12,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { DataTable, DataTablePagination } from '@/components/ui/data-table';
 import {
     Dialog,
     DialogContent,
@@ -23,20 +23,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { columns, type User } from './columns';
 
 type PermissionKey = 'admin' | 'receiving' | 'outgoing' | 'manager';
 
 type PermissionsState = {
     [K in PermissionKey]: boolean;
-};
-
-type User = {
-    id: string;
-    name: string;
-    email: string;
-    permissions: string[];
-    created_at: string;
 };
 
 type Props = {
@@ -52,6 +46,9 @@ type Props = {
             active: boolean;
         }>;
     };
+    filters: {
+        search?: string;
+    };
 };
 
 const props = defineProps<Props>();
@@ -62,6 +59,25 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/users',
     },
 ];
+
+// Server-side search
+const searchQuery = ref(props.filters.search || '');
+
+const debouncedSearch = useDebounceFn(() => {
+    router.get(
+        '/users',
+        {
+            search: searchQuery.value || undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['users', 'filters'],
+        },
+    );
+}, 300);
+
+watch(searchQuery, debouncedSearch);
 
 const createDialogOpen = ref(false);
 const editDialogOpen = ref(false);
@@ -84,9 +100,17 @@ const editForm = useForm({
 
 const availablePermissions = [
     { value: 'admin', label: 'Admin', description: 'Full system access' },
-    { value: 'receiving', label: 'Receiving', description: 'Manage goods receipt' },
+    {
+        value: 'receiving',
+        label: 'Receiving',
+        description: 'Manage goods receipt',
+    },
     { value: 'outgoing', label: 'Outgoing', description: 'Manage goods issue' },
-    { value: 'manager', label: 'Manager', description: 'Manage parts and requests' },
+    {
+        value: 'manager',
+        label: 'Manager',
+        description: 'Manage parts and requests',
+    },
 ];
 
 const createPermissions = ref<PermissionsState>({
@@ -103,9 +127,12 @@ const editPermissions = ref<PermissionsState>({
     manager: false,
 });
 
-function syncPermissionsToForm(permissions: typeof createPermissions, form: typeof createForm | typeof editForm) {
+function syncPermissionsToForm(
+    permissions: typeof createPermissions,
+    form: typeof createForm | typeof editForm,
+) {
     form.permissions = Object.entries(permissions.value)
-        .filter(([_, checked]) => checked)
+        .filter(([, checked]) => checked)
         .map(([permission]) => permission);
 }
 
@@ -115,7 +142,7 @@ function openEditDialog(user: User) {
     editForm.email = user.email;
     editForm.password = '';
     editForm.permissions = [...user.permissions];
-    
+
     // Set permission checkboxes
     editPermissions.value = {
         admin: user.permissions.includes('admin'),
@@ -123,7 +150,7 @@ function openEditDialog(user: User) {
         outgoing: user.permissions.includes('outgoing'),
         manager: user.permissions.includes('manager'),
     };
-    
+
     editDialogOpen.value = true;
 }
 
@@ -173,14 +200,6 @@ function confirmDelete() {
             deleteDialogOpen.value = false;
             selectedUser.value = null;
         },
-    });
-}
-
-function formatDate(date: string) {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
     });
 }
 </script>
@@ -250,7 +269,9 @@ function formatDate(date: string) {
                                         </span>
                                     </div>
                                     <div class="grid gap-2">
-                                        <Label for="create-password">Password</Label>
+                                        <Label for="create-password"
+                                            >Password</Label
+                                        >
                                         <Input
                                             id="create-password"
                                             v-model="createForm.password"
@@ -275,19 +296,29 @@ function formatDate(date: string) {
                                             >
                                                 <input
                                                     :id="`create-${permission.value}`"
-                                                    v-model="createPermissions[permission.value as PermissionKey]"
+                                                    v-model="
+                                                        createPermissions[
+                                                            permission.value as PermissionKey
+                                                        ]
+                                                    "
                                                     type="checkbox"
-                                                    class="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+                                                    class="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2"
                                                 />
-                                                <div class="grid gap-1 leading-none">
+                                                <div
+                                                    class="grid gap-1 leading-none"
+                                                >
                                                     <Label
                                                         :for="`create-${permission.value}`"
                                                         class="cursor-pointer font-medium"
                                                     >
                                                         {{ permission.label }}
                                                     </Label>
-                                                    <p class="text-xs text-muted-foreground">
-                                                        {{ permission.description }}
+                                                    <p
+                                                        class="text-xs text-muted-foreground"
+                                                    >
+                                                        {{
+                                                            permission.description
+                                                        }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -307,78 +338,43 @@ function formatDate(date: string) {
                     </Dialog>
                 </CardHeader>
 
-                <CardContent>
-                    <div class="space-y-4">
-                        <div
-                            v-if="props.users.data.length === 0"
-                            class="py-8 text-center text-muted-foreground"
-                        >
-                            No users found
-                        </div>
+                <CardContent class="space-y-4">
+                    <!-- Search -->
+                    <Input
+                        v-model="searchQuery"
+                        placeholder="Search by name or email..."
+                        class="w-full"
+                    />
 
-                        <div
-                            v-for="user in props.users.data"
-                            :key="user.id"
-                            class="flex items-center justify-between rounded-lg border p-4"
-                        >
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <h3 class="font-semibold">{{ user.name }}</h3>
-                                    <Badge
-                                        v-for="permission in user.permissions"
-                                        :key="permission"
-                                        :variant="permission === 'admin' ? 'default' : 'secondary'"
-                                    >
-                                        {{ permission.charAt(0).toUpperCase() + permission.slice(1) }}
-                                    </Badge>
-                                </div>
-                                <p class="text-sm text-muted-foreground">
-                                    {{ user.email }}
-                                </p>
-                                <p class="text-xs text-muted-foreground">
-                                    Created: {{ formatDate(user.created_at) }}
-                                </p>
-                            </div>
-
+                    <!-- Data Table -->
+                    <DataTable :columns="columns" :data="props.users.data">
+                        <template #toolbar>
                             <div class="flex gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    @click="openEditDialog(user)"
+                                    @click="openEditDialog"
+                                    v-if="selectedUser"
                                 >
-                                    <Pencil class="h-4 w-4" />
+                                    <Pencil class="mr-2 h-4 w-4" />
+                                    Edit
                                 </Button>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    @click="openDeleteDialog(user)"
+                                    @click="openDeleteDialog"
+                                    v-if="selectedUser"
                                 >
-                                    <Trash2 class="h-4 w-4" />
+                                    <Trash2 class="mr-2 h-4 w-4" />
+                                    Delete
                                 </Button>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div
-                        v-if="props.users.last_page > 1"
-                        class="mt-6 flex justify-center gap-2"
-                    >
-                        <Link
-                            v-for="link in props.users.links"
-                            :key="link.label"
-                            :href="link.url || '#'"
-                            :class="[
-                                'rounded-md px-3 py-2 text-sm',
-                                link.active
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-muted hover:bg-muted/80',
-                                !link.url && 'cursor-not-allowed opacity-50',
-                            ]"
-                            :disabled="!link.url"
-                            v-html="link.label"
-                        />
-                    </div>
+                        </template>
+                        <template #empty> No users found </template>
+                        <template #footer>
+                            <DataTablePagination :data="props.users" />
+                        </template>
+                    </DataTable>
                 </CardContent>
             </Card>
         </div>
@@ -453,9 +449,13 @@ function formatDate(date: string) {
                                 >
                                     <input
                                         :id="`edit-${permission.value}`"
-                                        v-model="editPermissions[permission.value as PermissionKey]"
+                                        v-model="
+                                            editPermissions[
+                                                permission.value as PermissionKey
+                                            ]
+                                        "
                                         type="checkbox"
-                                        class="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+                                        class="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2"
                                     />
                                     <div class="grid gap-1 leading-none">
                                         <Label
@@ -464,7 +464,9 @@ function formatDate(date: string) {
                                         >
                                             {{ permission.label }}
                                         </Label>
-                                        <p class="text-xs text-muted-foreground">
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
                                             {{ permission.description }}
                                         </p>
                                     </div>

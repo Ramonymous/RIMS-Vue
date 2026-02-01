@@ -1,12 +1,12 @@
 import { createInertiaApp, router } from '@inertiajs/vue3';
+import { configureEcho } from '@laravel/echo-vue';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import '../css/app.css';
 import 'vue-sonner/style.css';
-import { initializeTheme } from './composables/useAppearance';
-import { configureEcho } from '@laravel/echo-vue';
 import { toast } from 'vue-sonner';
+import { initializeTheme } from './composables/useAppearance';
 
 configureEcho({
     broadcaster: 'reverb',
@@ -17,19 +17,27 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const loadingEvent = 'inertia:loading';
 
 router.on('start', () => {
-    window.dispatchEvent(new CustomEvent(loadingEvent, { detail: { loading: true } }));
+    window.dispatchEvent(
+        new CustomEvent(loadingEvent, { detail: { loading: true } }),
+    );
 });
 
 router.on('finish', () => {
-    window.dispatchEvent(new CustomEvent(loadingEvent, { detail: { loading: false } }));
+    window.dispatchEvent(
+        new CustomEvent(loadingEvent, { detail: { loading: false } }),
+    );
 });
 
 router.on('invalid', () => {
-    window.dispatchEvent(new CustomEvent(loadingEvent, { detail: { loading: false } }));
+    window.dispatchEvent(
+        new CustomEvent(loadingEvent, { detail: { loading: false } }),
+    );
 });
 
 router.on('error', () => {
-    window.dispatchEvent(new CustomEvent(loadingEvent, { detail: { loading: false } }));
+    window.dispatchEvent(
+        new CustomEvent(loadingEvent, { detail: { loading: false } }),
+    );
 });
 
 createInertiaApp({
@@ -50,22 +58,25 @@ createInertiaApp({
 // Handle Inertia errors globally
 router.on('error', (event) => {
     console.error('[Inertia Error]', event);
-    
+
     // Access the response from the axios error
     const error = (event as any).detail;
     const response = error?.response;
     const status = response?.status;
-    const message = response?.data?.message || error?.message || 'An error occurred';
+    const message =
+        response?.data?.message || error?.message || 'An error occurred';
 
     if (status === 403) {
         console.warn('Access Denied:', message);
-        
+
         // Show toast notification for 403 errors
         toast.error('Access Denied', {
-            description: message || 'You do not have permission to access this resource.',
+            description:
+                message ||
+                'You do not have permission to access this resource.',
             duration: 5000,
         });
-        
+
         // Redirect to dashboard on unauthorized access
         router.visit('/');
     } else if (status === 419) {

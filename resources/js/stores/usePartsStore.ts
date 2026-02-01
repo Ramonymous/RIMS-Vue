@@ -1,6 +1,6 @@
-import { ref, computed, shallowRef, readonly, type Ref } from 'vue';
-import type { Part, PartFormData } from '@/composables/useParts';
+import { ref, computed, shallowRef } from 'vue';
 import { useCache } from '@/composables/useCache';
+import type { Part } from '@/composables/useParts';
 
 /**
  * Parts Store - Global state and caching for parts data
@@ -9,18 +9,20 @@ import { useCache } from '@/composables/useCache';
 export function usePartsStore() {
     // Cache for parts data (5 minutes TTL)
     const cache = useCache<Part[]>({ ttl: 5 * 60 * 1000 });
-    
+
     // Local state - use shallowRef for large arrays (better performance)
     const parts = shallowRef<Part[]>([]);
     const isLoading = ref(false);
     const lastFetch = ref<number>(0);
-    
+
     // Index for O(1) lookups
     const partsIndex = ref(new Map<string, Part>());
 
     // Computed
     const activeParts = computed(() => parts.value.filter((p) => p.is_active));
-    const lowStockParts = computed(() => parts.value.filter((p) => p.stock < 10));
+    const lowStockParts = computed(() =>
+        parts.value.filter((p) => p.stock < 10),
+    );
     const totalParts = computed(() => parts.value.length);
 
     // Cache key generator
@@ -41,10 +43,10 @@ export function usePartsStore() {
         const cacheKey = getCacheKey(filters);
         cache.set(cacheKey, newParts);
         lastFetch.value = Date.now();
-        
+
         // Rebuild index for fast lookups
         partsIndex.value.clear();
-        newParts.forEach(part => {
+        newParts.forEach((part) => {
             partsIndex.value.set(part.id, part);
         });
     };
@@ -65,7 +67,7 @@ export function usePartsStore() {
         if (index !== -1) {
             const original = { ...parts.value[index] };
             parts.value[index] = { ...parts.value[index], ...updates };
-            
+
             return {
                 revert: () => {
                     parts.value[index] = original;
@@ -124,12 +126,12 @@ export function usePartsStore() {
         parts,
         isLoading,
         lastFetch,
-        
+
         // Computed
         activeParts,
         lowStockParts,
         totalParts,
-        
+
         // Methods
         getParts,
         setParts,

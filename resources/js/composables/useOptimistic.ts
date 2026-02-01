@@ -10,7 +10,7 @@ export function useOptimistic<T>(initialData: T) {
 
     const update = (newData: T) => {
         const previousData = data.value;
-        
+
         // Optimistically update
         data.value = newData;
 

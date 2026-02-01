@@ -1,6 +1,6 @@
-import { ref, computed, shallowRef, type Ref } from 'vue';
-import type { Outgoing } from '@/composables/useOutgoings';
+import { ref, computed, shallowRef } from 'vue';
 import { useCache } from '@/composables/useCache';
+import type { Outgoing } from '@/composables/useOutgoings';
 
 /**
  * Outgoings Store - Global state and caching for outgoings data
@@ -9,29 +9,31 @@ import { useCache } from '@/composables/useCache';
 export function useOutgoingsStore() {
     // Cache for outgoings data (3 minutes TTL - more dynamic data)
     const cache = useCache<Outgoing[]>({ ttl: 3 * 60 * 1000 });
-    
+
     // Local state - use shallowRef for better performance
     const outgoings = shallowRef<Outgoing[]>([]);
     const isLoading = ref(false);
     const lastFetch = ref<number>(0);
 
     // Computed
-    const activeOutgoings = computed(() => 
-        outgoings.value.filter((o) => o.status !== 'cancelled')
+    const activeOutgoings = computed(() =>
+        outgoings.value.filter((o) => o.status !== 'cancelled'),
     );
-    const pendingOutgoings = computed(() => 
-        outgoings.value.filter((o) => o.status === 'draft')
+    const pendingOutgoings = computed(() =>
+        outgoings.value.filter((o) => o.status === 'draft'),
     );
-    const completedOutgoings = computed(() => 
-        outgoings.value.filter((o) => o.status === 'completed')
+    const completedOutgoings = computed(() =>
+        outgoings.value.filter((o) => o.status === 'completed'),
     );
-    const giConfirmedOutgoings = computed(() => 
-        outgoings.value.filter((o) => o.is_gi)
+    const giConfirmedOutgoings = computed(() =>
+        outgoings.value.filter((o) => o.is_gi),
     );
 
     // Cache key generator
     const getCacheKey = (filters?: Record<string, any>) => {
-        return filters ? `outgoings-${JSON.stringify(filters)}` : 'outgoings-all';
+        return filters
+            ? `outgoings-${JSON.stringify(filters)}`
+            : 'outgoings-all';
     };
 
     // Get cached outgoings or current state
@@ -42,7 +44,10 @@ export function useOutgoingsStore() {
     };
 
     // Set outgoings with caching
-    const setOutgoings = (newOutgoings: Outgoing[], filters?: Record<string, any>) => {
+    const setOutgoings = (
+        newOutgoings: Outgoing[],
+        filters?: Record<string, any>,
+    ) => {
         outgoings.value = newOutgoings;
         const cacheKey = getCacheKey(filters);
         cache.set(cacheKey, newOutgoings);
@@ -60,12 +65,15 @@ export function useOutgoingsStore() {
     };
 
     // Optimistic update
-    const updateOutgoingOptimistic = (id: string, updates: Partial<Outgoing>) => {
+    const updateOutgoingOptimistic = (
+        id: string,
+        updates: Partial<Outgoing>,
+    ) => {
         const index = outgoings.value.findIndex((o) => o.id === id);
         if (index !== -1) {
             const original = { ...outgoings.value[index] };
             outgoings.value[index] = { ...outgoings.value[index], ...updates };
-            
+
             return {
                 revert: () => {
                     outgoings.value[index] = original;
@@ -97,13 +105,13 @@ export function useOutgoingsStore() {
         outgoings,
         isLoading,
         lastFetch,
-        
+
         // Computed
         activeOutgoings,
         pendingOutgoings,
         completedOutgoings,
         giConfirmedOutgoings,
-        
+
         // Methods
         getOutgoings,
         setOutgoings,

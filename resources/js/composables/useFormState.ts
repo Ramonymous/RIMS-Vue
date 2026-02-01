@@ -19,7 +19,7 @@ export function useFormState<T extends Record<string, any>>(
         onError?: (errors: any) => void;
         preserveScroll?: boolean;
         method?: 'post' | 'put' | 'patch' | 'delete';
-    } = {}
+    } = {},
 ): FormState<T> {
     const form = useForm(initialData);
     const isDirty = ref(false);
@@ -29,9 +29,10 @@ export function useFormState<T extends Record<string, any>>(
     watch(
         () => form.data(),
         (newData) => {
-            isDirty.value = JSON.stringify(newData) !== JSON.stringify(originalData);
+            isDirty.value =
+                JSON.stringify(newData) !== JSON.stringify(originalData);
         },
-        { deep: true }
+        { deep: true },
     );
 
     const reset = () => {
@@ -42,7 +43,8 @@ export function useFormState<T extends Record<string, any>>(
     const submit = (url: string, options: any = {}) => {
         const method = config.method || options.method || 'post';
         const submitOptions = {
-            preserveScroll: config.preserveScroll ?? options.preserveScroll ?? true,
+            preserveScroll:
+                config.preserveScroll ?? options.preserveScroll ?? true,
             onSuccess: () => {
                 isDirty.value = false;
                 config.onSuccess?.();

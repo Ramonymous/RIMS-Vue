@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { PackageCheck, Plus, Trash2, AlertTriangle } from 'lucide-vue-next';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import { nextTick, ref } from 'vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -12,6 +11,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -19,10 +20,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
 
 type Part = {
     id: string;
@@ -67,7 +67,7 @@ const form = useForm({
     received_at: props.receiving.received_at.slice(0, 16),
     status: props.receiving.status as 'draft' | 'completed',
     notes: props.receiving.notes || '',
-    items: props.receiving.items.map(item => ({
+    items: props.receiving.items.map((item) => ({
         id: crypto.randomUUID(),
         part_id: item.part.id,
         qty: item.qty,
@@ -92,48 +92,52 @@ function removeItem(index: number) {
 
 function checkDuplicatePart(index: number, partId: any) {
     if (!partId) return;
-    
+
     const partIdStr = String(partId);
     const duplicateIndex = form.items.findIndex(
-        (item, idx) => idx !== index && item.part_id === partIdStr
+        (item, idx) => idx !== index && item.part_id === partIdStr,
     );
-    
+
     if (duplicateIndex !== -1) {
-        const part = props.parts.find(p => p.id === partId);
+        const part = props.parts.find((p) => p.id === partId);
         duplicateAlert.value = `Part "${part?.part_number}" is already added in this receiving!`;
-        
+
         // Highlight both items
         form.items[index].isHighlighted = true;
         form.items[duplicateIndex].isHighlighted = true;
-        
+
         // Focus on the duplicate item
         nextTick(() => {
             const elementKey = `item-${form.items[duplicateIndex].id}`;
             if (itemRefs.value[elementKey]) {
-                itemRefs.value[elementKey].scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
+                itemRefs.value[elementKey].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
                 });
             }
         });
     } else {
         // Remove highlight
         form.items[index].isHighlighted = false;
-        
+
         // Check if any duplicates remain
-        const hasDuplicates = form.items.some((item, idx) => 
-            form.items.findIndex((i, iIdx) => iIdx !== idx && i.part_id === item.part_id && i.part_id) !== -1
+        const hasDuplicates = form.items.some(
+            (item, idx) =>
+                form.items.findIndex(
+                    (i, iIdx) =>
+                        iIdx !== idx && i.part_id === item.part_id && i.part_id,
+                ) !== -1,
         );
-        
+
         if (!hasDuplicates) {
             duplicateAlert.value = null;
-            form.items.forEach(item => item.isHighlighted = false);
+            form.items.forEach((item) => (item.isHighlighted = false));
         }
     }
 }
 
 function getPartInfo(partId: string): Part | undefined {
-    return props.parts.find(p => p.id === partId);
+    return props.parts.find((p) => p.id === partId);
 }
 
 function saveDraft() {
@@ -150,7 +154,7 @@ function submitForm() {
     if (duplicateAlert.value) {
         return;
     }
-    
+
     form.put(`/receivings/${props.receiving.id}`, {
         preserveScroll: true,
     });
@@ -183,7 +187,7 @@ function setItemRef(id: string, el: any) {
                     <!-- Header Section -->
                     <div class="grid gap-4 rounded-lg border p-4">
                         <h3 class="font-semibold">Document Information</h3>
-                        
+
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="grid gap-2">
                                 <Label for="doc-number">
@@ -277,11 +281,14 @@ function setItemRef(id: string, el: any) {
                             :ref="(el) => setItemRef(item.id, el)"
                             class="grid gap-4 rounded-lg border p-4 transition-colors"
                             :class="{
-                                'border-yellow-500 bg-yellow-50 dark:bg-yellow-950': item.isHighlighted
+                                'border-yellow-500 bg-yellow-50 dark:bg-yellow-950':
+                                    item.isHighlighted,
                             }"
                         >
                             <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium">Item #{{ index + 1 }}</span>
+                                <span class="text-sm font-medium"
+                                    >Item #{{ index + 1 }}</span
+                                >
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -300,11 +307,15 @@ function setItemRef(id: string, el: any) {
                                     </Label>
                                     <Select
                                         v-model="item.part_id"
-                                        @update:model-value="checkDuplicatePart(index, $event)"
+                                        @update:model-value="
+                                            checkDuplicatePart(index, $event)
+                                        "
                                         required
                                     >
                                         <SelectTrigger :id="`part-${item.id}`">
-                                            <SelectValue placeholder="Select part" />
+                                            <SelectValue
+                                                placeholder="Select part"
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem
@@ -312,18 +323,29 @@ function setItemRef(id: string, el: any) {
                                                 :key="part.id"
                                                 :value="part.id"
                                             >
-                                                {{ part.part_number }} - {{ part.part_name }}
-                                                <span class="text-muted-foreground">
+                                                {{ part.part_number }} -
+                                                {{ part.part_name }}
+                                                <span
+                                                    class="text-muted-foreground"
+                                                >
                                                     (Stock: {{ part.stock }})
                                                 </span>
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <span
-                                        v-if="form.errors[`items.${index}.part_id`]"
+                                        v-if="
+                                            form.errors[
+                                                `items.${index}.part_id`
+                                            ]
+                                        "
                                         class="text-sm text-destructive"
                                     >
-                                        {{ form.errors[`items.${index}.part_id`] }}
+                                        {{
+                                            form.errors[
+                                                `items.${index}.part_id`
+                                            ]
+                                        }}
                                     </span>
                                 </div>
 
@@ -354,12 +376,19 @@ function setItemRef(id: string, el: any) {
                             >
                                 <div class="grid gap-1">
                                     <div>
-                                        <span class="font-medium">Current Stock:</span>
+                                        <span class="font-medium"
+                                            >Current Stock:</span
+                                        >
                                         {{ getPartInfo(item.part_id)?.stock }}
                                     </div>
                                     <div>
-                                        <span class="font-medium">After Receiving:</span>
-                                        {{ (getPartInfo(item.part_id)?.stock || 0) + item.qty }}
+                                        <span class="font-medium"
+                                            >After Receiving:</span
+                                        >
+                                        {{
+                                            (getPartInfo(item.part_id)?.stock ||
+                                                0) + item.qty
+                                        }}
                                     </div>
                                 </div>
                             </div>
@@ -380,16 +409,28 @@ function setItemRef(id: string, el: any) {
                             type="button"
                             variant="outline"
                             @click="saveDraft"
-                            :disabled="form.processing || !form.items.length || !!duplicateAlert"
+                            :disabled="
+                                form.processing ||
+                                !form.items.length ||
+                                !!duplicateAlert
+                            "
                         >
                             Save as Draft
                         </Button>
                         <Button
                             type="button"
                             @click="confirm"
-                            :disabled="form.processing || !form.items.length || !!duplicateAlert"
+                            :disabled="
+                                form.processing ||
+                                !form.items.length ||
+                                !!duplicateAlert
+                            "
                         >
-                            {{ form.processing ? 'Processing...' : 'Confirm & Update Stock' }}
+                            {{
+                                form.processing
+                                    ? 'Processing...'
+                                    : 'Confirm & Update Stock'
+                            }}
                         </Button>
                     </div>
                 </CardContent>

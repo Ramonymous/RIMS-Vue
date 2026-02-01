@@ -86,7 +86,7 @@ export function initializeTheme(): void {
     if (themeListener) {
         themeListener.removeEventListener('change', handleSystemThemeChange);
     }
-    
+
     themeListener = mediaQuery();
     themeListener?.addEventListener('change', handleSystemThemeChange);
 }
