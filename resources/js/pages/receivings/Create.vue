@@ -197,20 +197,11 @@ function setItemRef(id: string, el: any) {
                             <div class="grid gap-2">
                                 <Label for="doc-number">
                                     Document Number
-                                    <span class="text-destructive">*</span>
+                                    <span class="text-muted-foreground text-xs">(Auto-generated)</span>
                                 </Label>
-                                <Input
-                                    id="doc-number"
-                                    v-model="form.doc_number"
-                                    placeholder="RCV-2026-001"
-                                    required
-                                />
-                                <span
-                                    v-if="form.errors.doc_number"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.doc_number }}
-                                </span>
+                                <div class="flex items-center gap-2 rounded-md border bg-muted px-3 py-2 text-muted-foreground">
+                                    <span class="font-mono">{{ form.doc_number || 'RCV-YYMMDD-###' }}</span>
+                                </div>
                             </div>
 
                             <div class="grid gap-2">
