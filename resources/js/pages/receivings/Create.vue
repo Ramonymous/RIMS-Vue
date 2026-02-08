@@ -46,6 +46,7 @@ type ReceivingItem = {
 
 type Props = {
     parts: Part[];
+    nextDocNumber: string;
 };
 
 const props = defineProps<Props>();
@@ -56,7 +57,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
-    doc_number: '',
+    doc_number: props.nextDocNumber,
     received_at: new Date().toISOString().slice(0, 16),
     status: 'draft' as 'draft' | 'completed',
     notes: '',

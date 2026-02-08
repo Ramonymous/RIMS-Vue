@@ -5,11 +5,11 @@ namespace App\Events;
 use App\Models\RequestLists;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class RequestItemCreated implements ShouldBroadcast
+class RequestItemCreated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -26,6 +26,14 @@ class RequestItemCreated implements ShouldBroadcast
         return [
             new Channel('request-items'),
         ];
+    }
+
+    /**
+     * Define a short, stable event name for the frontend.
+     */
+    public function broadcastAs(): string
+    {
+        return 'RequestItemCreated';
     }
 
     /**

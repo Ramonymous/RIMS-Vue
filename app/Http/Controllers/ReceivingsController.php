@@ -20,6 +20,31 @@ class ReceivingsController extends Controller
         private AuthorizationService $authService
     ) {}
 
+    /**
+     * Generate the next document number based on current date and existing records.
+     */
+    private function getNextDocNumber(): string
+    {
+        $now = now();
+        $prefix = 'RCV-'.$now->format('dmy');
+
+        $lastDoc = Receivings::query()
+            ->where('doc_number', 'LIKE', $prefix.'%')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($lastDoc) {
+            // Extract the sequential number from doc_number (e.g., "RCV-310126-005" -> 5)
+            $parts = explode('-', $lastDoc->doc_number);
+            $lastNumber = (int) end($parts);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return sprintf('%s-%03d', $prefix, $nextNumber);
+    }
+
     public function index(Request $request): Response
     {
         $query = Receivings::query()
@@ -71,6 +96,7 @@ class ReceivingsController extends Controller
 
         return Inertia::render('receivings/Create', [
             'parts' => $parts,
+            'nextDocNumber' => $this->getNextDocNumber(),
         ]);
     }
 

@@ -9,7 +9,7 @@ import {
     VolumeX,
     MapPin,
 } from 'lucide-vue-next';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import SupplyConfirmationDialog from '@/components/SupplyConfirmationDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -93,6 +93,13 @@ const isAnnouncing = ref(false);
 
 // Local state for realtime items
 const realtimeItemsRaw = ref<RequestItem[]>([...props.requestItems.data]);
+
+watch(
+    () => props.requestItems.data,
+    (newData) => {
+        realtimeItemsRaw.value = [...newData];
+    },
+);
 
 // Reactive current time to trigger delay recalculations
 const currentTime = ref(Date.now());
@@ -380,7 +387,7 @@ function handleNewRequestItem(data: { item: RequestItem }) {
 // Listen for realtime updates using useEchoPublic
 useEchoPublic<{ item: RequestItem }>(
     'request-items',
-    'RequestItemCreated',
+    '.RequestItemCreated',
     handleNewRequestItem,
 );
 
