@@ -89,7 +89,14 @@ class RequestService
         $createdItem->load(['part', 'request.requestedBy']);
 
         // Broadcast the event
-        broadcast(new RequestItemCreated($createdItem));
+        try {
+            broadcast(new RequestItemCreated($createdItem));
+        } catch (\Throwable $e) {
+            Log::warning('RequestItemCreated broadcast failed', [
+                'request_item_id' => $createdItem->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $createdItem;
     }

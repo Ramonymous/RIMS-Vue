@@ -1,5 +1,11 @@
 import type { AppPageProps } from './index';
 
+declare global {
+    interface Window {
+        Echo?: any;
+    }
+}
+
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
     interface ImportMetaEnv {
