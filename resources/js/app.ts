@@ -8,8 +8,16 @@ import 'vue-sonner/style.css';
 import { toast } from 'vue-sonner';
 import { initializeTheme } from './composables/useAppearance';
 
+// Configure Echo with your Reverb credentials
 configureEcho({
     broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
+    wsPort: import.meta.env.VITE_REVERB_PORT || 80,
+    wssPort: import.meta.env.VITE_REVERB_PORT || 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
+    disableStats: true,
 });
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -48,10 +56,14 @@ createInertiaApp({
             import.meta.glob<DefineComponent>('./pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
+        const vueApp = createApp({ render: () => h(App, props) })
             .use(plugin)
-            .component('Link', Link)
-            .mount(el);
+            .component('Link', Link);
+            
+        // You can now use Echo globally in your components
+        vueApp.config.globalProperties.$echo = window.Echo;
+        
+        vueApp.mount(el);
     },
     progress: false,
 });
