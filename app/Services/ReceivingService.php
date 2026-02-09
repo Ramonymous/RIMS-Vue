@@ -24,7 +24,7 @@ class ReceivingService
                 'received_at' => $data['received_at'],
                 'status' => $data['status'],
                 'notes' => $data['notes'] ?? null,
-                'is_gr' => false,
+                    // 'is_gr' removed
             ]);
 
             foreach ($data['items'] as $item) {
@@ -100,17 +100,7 @@ class ReceivingService
     /**
      * Toggle GR status
      */
-    public function toggleGrStatus(Receivings $receiving): Receivings
-    {
-        $receiving->update(['is_gr' => ! $receiving->is_gr]);
-
-        Log::info('Receiving GR status toggled', [
-            'receiving_id' => $receiving->id,
-            'is_gr' => $receiving->is_gr,
-        ]);
-
-        return $receiving;
-    }
+    // toggleGrStatus removed
 
     /**
      * Add an item to a receiving
@@ -217,9 +207,7 @@ class ReceivingService
      */
     private function validateReceivingEditable(Receivings $receiving): void
     {
-        if ($receiving->is_gr) {
-            throw new BusinessException('Cannot edit receiving that has been GR confirmed', 403);
-        }
+        // GR edit restriction removed
 
         if ($receiving->status === 'cancelled') {
             throw new BusinessException('Cannot edit cancelled receiving', 403);

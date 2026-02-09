@@ -55,7 +55,7 @@ class ReceivingsController extends Controller
                 'received_by',
                 'received_at',
                 'status',
-                'is_gr',
+                // 'is_gr' removed
                 'created_at',
             ]);
 

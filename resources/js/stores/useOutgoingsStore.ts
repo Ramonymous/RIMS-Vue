@@ -25,9 +25,7 @@ export function useOutgoingsStore() {
     const completedOutgoings = computed(() =>
         outgoings.value.filter((o) => o.status === 'completed'),
     );
-    const giConfirmedOutgoings = computed(() =>
-        outgoings.value.filter((o) => o.is_gi),
-    );
+    // GI confirmed outgoings removed
 
     // Cache key generator
     const getCacheKey = (filters?: Record<string, any>) => {
@@ -110,7 +108,6 @@ export function useOutgoingsStore() {
         activeOutgoings,
         pendingOutgoings,
         completedOutgoings,
-        giConfirmedOutgoings,
 
         // Methods
         getOutgoings,

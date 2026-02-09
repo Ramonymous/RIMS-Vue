@@ -62,8 +62,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Create', href: '/requests/create' },
 ];
 
+function getLocalDatetimeString() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const local = new Date(now.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+}
+
 const form = useForm({
-    requested_at: new Date().toISOString().slice(0, 16),
+    requested_at: getLocalDatetimeString(),
     destination: '',
     status: 'draft' as 'draft' | 'completed',
     notes: '',
@@ -237,7 +244,7 @@ function submitForm() {
                 response.props?.jetstream?.flash?.message ||
                 'Request confirmed successfully.';
 
-            alert(message);
+            // alert(message);
 
             // Reset form
             form.reset();

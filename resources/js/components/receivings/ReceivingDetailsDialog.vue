@@ -15,7 +15,7 @@ interface Props {
     open: boolean;
     receiving: Receiving | null;
     formatDate: (date: string) => string;
-    getStatusVariant: (status: string) => string;
+    getStatusVariant: (status: string) => "default" | "secondary" | "destructive" | "outline" | null | undefined;
 }
 
 interface Emits {
@@ -45,13 +45,7 @@ const emit = defineEmits<Emits>();
                         >
                             {{ receiving.status }}
                         </Badge>
-                        <Badge
-                            v-if="receiving.is_gr"
-                            variant="default"
-                            class="ml-2"
-                        >
-                            GR Confirmed
-                        </Badge>
+                        <!-- GR Confirmed badge removed -->
                     </div>
                     <div>
                         <span class="font-medium">Received By:</span>

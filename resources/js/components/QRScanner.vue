@@ -207,11 +207,13 @@ onUnmounted(() => {
 
 <template>
     <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
     >
-        <div class="relative w-full max-w-2xl rounded-lg bg-background p-4">
-            <div class="mb-4 flex items-center justify-between">
-                <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <div class="relative w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-2xl">
+            <div
+                class="flex items-center justify-between border-b bg-gradient-to-r from-muted/60 to-background px-4 py-3"
+            >
+                <h3 class="flex items-center gap-2 text-base font-semibold">
                     <ScanLine class="h-5 w-5" />
                     Scan QR Code
                 </h3>
@@ -220,85 +222,87 @@ onUnmounted(() => {
                 </Button>
             </div>
 
-            <Alert v-if="error" variant="destructive" class="mb-4">
-                <AlertDescription>{{ error }}</AlertDescription>
-            </Alert>
+            <div class="p-4">
+                <Alert v-if="error" variant="destructive" class="mb-4">
+                    <AlertDescription>{{ error }}</AlertDescription>
+                </Alert>
 
-            <div
-                class="relative aspect-video w-full overflow-hidden rounded-lg bg-muted"
-            >
-                <video
-                    ref="videoRef"
-                    class="h-full w-full object-cover"
-                    autoplay
-                    playsinline
-                />
+                <div class="relative aspect-video w-full overflow-hidden rounded-xl bg-muted">
+                    <video
+                        ref="videoRef"
+                        class="h-full w-full object-cover"
+                        autoplay
+                        playsinline
+                    />
 
-                <!-- Scanning overlay -->
-                <div
-                    v-if="isScanning"
-                    class="absolute inset-0 flex items-center justify-center"
-                >
+                    <!-- Scanning overlay -->
                     <div
-                        class="relative h-48 w-48 rounded-lg border-4 border-primary"
+                        v-if="isScanning"
+                        class="absolute inset-0 flex items-center justify-center"
                     >
-                        <div
-                            class="animate-scan absolute inset-0 border-t-4 border-primary"
-                        />
+                        <div class="relative h-56 w-56">
+                            <div class="absolute inset-0 rounded-xl border border-white/20" />
+                            <div class="absolute inset-0 rounded-xl ring-2 ring-primary/70" />
+                            <div class="absolute -left-1 -top-1 h-6 w-6 rounded-tl-xl border-l-4 border-t-4 border-primary" />
+                            <div class="absolute -right-1 -top-1 h-6 w-6 rounded-tr-xl border-r-4 border-t-4 border-primary" />
+                            <div class="absolute -left-1 -bottom-1 h-6 w-6 rounded-bl-xl border-l-4 border-b-4 border-primary" />
+                            <div class="absolute -right-1 -bottom-1 h-6 w-6 rounded-br-xl border-r-4 border-b-4 border-primary" />
+                            <div class="animate-scan absolute inset-0 rounded-xl border-t-4 border-primary" />
+                        </div>
+                    </div>
+
+                    <!-- Loading state -->
+                    <div
+                        v-if="!isScanning && !error"
+                        class="absolute inset-0 flex items-center justify-center"
+                    >
+                        <div class="flex flex-col items-center gap-2">
+                            <Camera
+                                class="h-12 w-12 animate-pulse text-muted-foreground"
+                            />
+                            <p class="text-sm text-muted-foreground">
+                                Initializing camera...
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Loading state -->
-                <div
-                    v-if="!isScanning && !error"
-                    class="absolute inset-0 flex items-center justify-center"
-                >
-                    <div class="flex flex-col items-center gap-2">
-                        <Camera
-                            class="h-12 w-12 animate-pulse text-muted-foreground"
-                        />
+                <div class="mt-4 space-y-2">
+                    <p class="text-center text-sm text-muted-foreground">
+                        Position the QR code within the frame
+                    </p>
+
+                    <!-- Device selector if multiple cameras -->
+                    <div
+                        v-if="devices.length > 1"
+                        class="flex justify-center gap-2"
+                    >
+                        <Button
+                            v-for="(device, index) in devices"
+                            :key="device.deviceId"
+                            variant="outline"
+                            size="sm"
+                            :class="{
+                                'bg-primary text-primary-foreground':
+                                    selectedDeviceId === device.deviceId,
+                            }"
+                            :disabled="isInCooldown"
+                            @click="
+                                selectedDeviceId = device.deviceId;
+                                switchCamera();
+                            "
+                        >
+                            <Camera class="mr-2 h-3 w-3" />
+                            Camera {{ index + 1 }}
+                        </Button>
+                    </div>
+
+                    <!-- Cooldown indicator -->
+                    <div v-if="isInCooldown" class="text-center">
                         <p class="text-sm text-muted-foreground">
-                            Initializing camera...
+                            Processing scan... Please wait.
                         </p>
                     </div>
-                </div>
-            </div>
-
-            <div class="mt-4 space-y-2">
-                <p class="text-center text-sm text-muted-foreground">
-                    Position the QR code within the frame
-                </p>
-
-                <!-- Device selector if multiple cameras -->
-                <div
-                    v-if="devices.length > 1"
-                    class="flex justify-center gap-2"
-                >
-                    <Button
-                        v-for="(device, index) in devices"
-                        :key="device.deviceId"
-                        variant="outline"
-                        size="sm"
-                        :class="{
-                            'bg-primary text-primary-foreground':
-                                selectedDeviceId === device.deviceId,
-                        }"
-                        :disabled="isInCooldown"
-                        @click="
-                            selectedDeviceId = device.deviceId;
-                            switchCamera();
-                        "
-                    >
-                        <Camera class="mr-2 h-3 w-3" />
-                        Camera {{ index + 1 }}
-                    </Button>
-                </div>
-
-                <!-- Cooldown indicator -->
-                <div v-if="isInCooldown" class="text-center">
-                    <p class="text-sm text-muted-foreground">
-                        Processing scan... Please wait.
-                    </p>
                 </div>
             </div>
         </div>

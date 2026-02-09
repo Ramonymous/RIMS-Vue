@@ -22,14 +22,12 @@ class Receivings extends Model
         'received_at',
         'status',
         'notes',
-        'is_gr',
     ];
 
     protected function casts(): array
     {
         return [
             'received_at' => 'datetime',
-            'is_gr' => 'boolean',
             'deleted_at' => 'datetime',
         ];
     }

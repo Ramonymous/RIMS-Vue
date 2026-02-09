@@ -25,7 +25,7 @@ class OutgoingService
                 'issued_at' => $data['issued_at'],
                 'status' => $data['status'],
                 'notes' => $data['notes'] ?? null,
-                'is_gi' => false,
+                'is_gi' => true,
             ]);
 
             foreach ($data['items'] as $item) {
@@ -92,8 +92,8 @@ class OutgoingService
 
             $outgoing->update(['status' => 'cancelled']);
 
-            Log::info('Outgoing cancelled', ['outgoing_id' => $outgoing->id]);
 
+                    // 'is_gi' removed
             return $outgoing;
         });
     }
@@ -101,17 +101,7 @@ class OutgoingService
     /**
      * Toggle GI status
      */
-    public function toggleGiStatus(Outgoings $outgoing): Outgoings
-    {
-        $outgoing->update(['is_gi' => ! $outgoing->is_gi]);
-
-        Log::info('Outgoing GI status toggled', [
-            'outgoing_id' => $outgoing->id,
-            'is_gi' => $outgoing->is_gi,
-        ]);
-
-        return $outgoing;
-    }
+    // toggleGiStatus removed
 
     /**
      * Add an item to an outgoing
@@ -214,9 +204,7 @@ class OutgoingService
      */
     private function validateOutgoingEditable(Outgoings $outgoing): void
     {
-        if ($outgoing->is_gi) {
-            throw new BusinessException('Cannot edit outgoing that has been GI confirmed', 403);
-        }
+        // GI edit restriction removed
 
         if ($outgoing->status === 'cancelled') {
             throw new BusinessException('Cannot edit cancelled outgoing', 403);

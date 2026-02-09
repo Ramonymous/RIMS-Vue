@@ -19,7 +19,7 @@ class RequestService
             $request = Requests::create([
                 'request_number' => $data['request_number'],
                 'requested_by' => $data['requested_by'],
-                'requested_at' => $data['requested_at'],
+                'requested_at' => $data['requested_at'] ?? $data['created_at'],
                 'destination' => $data['destination'],
                 'status' => $data['status'],
                 'notes' => $data['notes'] ?? null,
@@ -43,7 +43,7 @@ class RequestService
         return DB::transaction(function () use ($request, $data) {
             $request->update([
                 'request_number' => $data['request_number'],
-                'requested_at' => $data['requested_at'],
+                'requested_at' => $data['requested_at'] ?? $data['created_at'],
                 'destination' => $data['destination'],
                 'status' => $data['status'],
                 'notes' => $data['notes'] ?? null,

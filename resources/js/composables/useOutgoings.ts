@@ -9,7 +9,7 @@ export interface Outgoing {
     issued_by: { id: string; name: string };
     issued_at: string;
     status: 'draft' | 'completed' | 'cancelled';
-    is_gi: boolean;
+    // is_gi removed
     items: any[];
     created_at: string;
 }
@@ -102,7 +102,7 @@ export function useOutgoings(
 
     const canEdit = computed(() => {
         return (outgoing: Outgoing) => {
-            return !outgoing.is_gi && outgoing.status !== 'cancelled';
+            return outgoing.status !== 'cancelled';
         };
     });
 

@@ -22,14 +22,12 @@ class Outgoings extends Model
         'issued_at',
         'status',
         'notes',
-        'is_gi',
     ];
 
     protected function casts(): array
     {
         return [
             'issued_at' => 'datetime',
-            'is_gi' => 'boolean',
             'deleted_at' => 'datetime',
         ];
     }

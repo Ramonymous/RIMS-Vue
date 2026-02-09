@@ -8,6 +8,10 @@ Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index'])
     ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::get('locations', fn () => Inertia::render('locations/Index'));
+    Route::post('locations/check', [\App\Http\Controllers\RequestsController::class, 'checkLocations']);
+    
     Route::resource('users', \App\Http\Controllers\UserController::class)
         ->only(['index', 'store', 'update', 'destroy']);
 

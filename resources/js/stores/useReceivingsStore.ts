@@ -25,9 +25,7 @@ export function useReceivingsStore() {
     const completedReceivings = computed(() =>
         receivings.value.filter((r) => r.status === 'completed'),
     );
-    const grConfirmedReceivings = computed(() =>
-        receivings.value.filter((r) => r.is_gr),
-    );
+    // GR confirmed receivings removed
 
     // Cache key generator
     const getCacheKey = (filters?: Record<string, any>) => {
@@ -113,7 +111,6 @@ export function useReceivingsStore() {
         activeReceivings,
         pendingReceivings,
         completedReceivings,
-        grConfirmedReceivings,
 
         // Methods
         getReceivings,
