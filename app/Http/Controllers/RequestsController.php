@@ -253,6 +253,7 @@ class RequestsController extends Controller
                     'issued_by' => auth()->id(),
                     'issued_at' => now(),
                     'status' => 'completed', // Auto-complete since it's from supply
+                    // 'is_gi' removed
                     'notes' => "Auto-generated from request #{$requestItem->request->request_number} - {$requestItem->request->destination}",
                 ]);
 
@@ -308,4 +309,40 @@ class RequestsController extends Controller
 
         return redirect()->back()->with('success', 'Pick command sent.');
     }
+
+    /**
+     * Check part location by part number (for /locations page)
+     */
+    public function checkLocations(Request $request): \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'part_number' => 'required|string',
+        ]);
+
+        $partNumber = trim($request->input('part_number'));
+        $part = Parts::where('part_number', $partNumber)->first();
+
+        if (! $part) {
+            if ($request->expectsJson() || $request->wantsJson()) {
+                return response()->json(['error' => 'Part not found.'], 404);
+            }
+            return redirect()->back()->withErrors(['part_number' => 'Part not found.'])->withInput();
+        }
+
+        // Example: assuming 'address' is the location field
+        $location = $part->address ?? 'No location set.';
+
+        // Jalankan cache pick_command
+        cache()->put(
+            'pick_command',
+            $part->part_number,
+            now()->addSeconds(self::CACHE_TTL)
+        );
+
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json(['location' => $location]);
+        }
+        return redirect()->back()->with('location', $location);
+    }
+
 }

@@ -9,7 +9,7 @@ export interface Receiving {
     received_by: { id: string; name: string };
     received_at: string;
     status: 'draft' | 'completed' | 'cancelled';
-    is_gr: boolean;
+    // is_gr removed
     items: any[];
     created_at: string;
 }
@@ -106,7 +106,7 @@ export function useReceivings(
 
     const canEdit = computed(() => {
         return (receiving: Receiving) => {
-            return !receiving.is_gr && receiving.status !== 'cancelled';
+            return receiving.status !== 'cancelled';
         };
     });
 

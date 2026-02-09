@@ -56,7 +56,7 @@ const { canManageOutgoings, canConfirmGI } = usePermissions();
 
 // Dialogs
 const cancelDialogOpen = ref(false);
-const giDialogOpen = ref(false);
+// giDialogOpen removed
 const viewDialogOpen = ref(false);
 const selectedOutgoing = ref<Outgoing | null>(null);
 
@@ -71,10 +71,7 @@ const openCancelDialog = (outgoing: Outgoing) => {
     cancelDialogOpen.value = true;
 };
 
-const openGiDialog = (outgoing: Outgoing) => {
-    selectedOutgoing.value = outgoing;
-    giDialogOpen.value = true;
-};
+// openGiDialog removed
 
 const cancelOutgoing = () => {
     if (!selectedOutgoing.value) return;
@@ -91,28 +88,13 @@ const cancelOutgoing = () => {
     );
 };
 
-const updateGiStatus = () => {
-    if (!selectedOutgoing.value) return;
-
-    router.post(
-        `/outgoings/${selectedOutgoing.value.id}/gi`,
-        {},
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                giDialogOpen.value = false;
-            },
-        },
-    );
-};
+// updateGiStatus removed
 
 // Create columns with context
 const columns = createColumns({
     onView: openViewDialog,
     onCancel: openCancelDialog,
-    onUpdateGI: openGiDialog,
     canManageOutgoings: canManageOutgoings.value,
-    canConfirmGI: canConfirmGI.value,
 });
 
 // Server-side search
@@ -257,13 +239,7 @@ const formatDate = (date: string): string => {
                             >
                                 {{ selectedOutgoing.status }}
                             </Badge>
-                            <Badge
-                                v-if="selectedOutgoing.is_gi"
-                                variant="default"
-                                class="ml-2"
-                            >
-                                GI Confirmed
-                            </Badge>
+                            <!-- GI Confirmed badge removed -->
                         </div>
                         <div>
                             <span class="font-medium">Issued By:</span>
@@ -319,27 +295,6 @@ const formatDate = (date: string): string => {
             </DialogContent>
         </Dialog>
 
-        <!-- GI Status Dialog -->
-        <Dialog v-model:open="giDialogOpen">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Update GI Status?</DialogTitle>
-                    <DialogDescription>
-                        This will
-                        {{ selectedOutgoing?.is_gi ? 'unconfirm' : 'confirm' }}
-                        GI for outgoing "{{ selectedOutgoing?.doc_number }}".
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" @click="giDialogOpen = false">
-                        Close
-                    </Button>
-                    <Button @click="updateGiStatus">
-                        {{ selectedOutgoing?.is_gi ? 'Unconfirm' : 'Confirm' }}
-                        GI
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <!-- GI Status Dialog removed -->
     </AppLayout>
 </template>

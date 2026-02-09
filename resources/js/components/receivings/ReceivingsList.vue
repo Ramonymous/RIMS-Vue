@@ -41,9 +41,7 @@ const emit = defineEmits<Emits>();
                     <Badge :variant="getStatusVariant(receiving.status)">
                         {{ receiving.status }}
                     </Badge>
-                    <Badge v-if="receiving.is_gr" variant="default">
-                        GR Confirmed
-                    </Badge>
+                    <!-- GR Confirmed badge removed -->
                 </div>
                 <div
                     class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground md:grid-cols-4"

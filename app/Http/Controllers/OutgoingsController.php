@@ -55,7 +55,7 @@ class OutgoingsController extends Controller
                 'issued_by',
                 'issued_at',
                 'status',
-                'is_gi',
+                // 'is_gi' removed
                 'created_at',
             ]);
 

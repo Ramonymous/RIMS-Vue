@@ -27,13 +27,11 @@ class DashboardController extends Controller
 
         // Receivings & Outgoings Stats - Combined queries
         $receivingStats = Receivings::selectRaw('
-            COUNT(*) as total,
-            COUNT(CASE WHEN is_gr = false THEN 1 END) as pending
+            COUNT(*) as total
         ')->first();
         
         $outgoingStats = Outgoings::selectRaw('
-            COUNT(*) as total,
-            COUNT(CASE WHEN is_gi = false THEN 1 END) as pending
+            COUNT(*) as total
         ')->first();
 
         $now = now();

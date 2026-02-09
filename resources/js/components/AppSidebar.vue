@@ -9,6 +9,7 @@ import {
     BarChart3,
     FileInput,
 } from 'lucide-vue-next';
+
 import { computed } from 'vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -26,8 +27,9 @@ import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
+import { MapPin } from 'lucide-vue-next';
 
-const { isAdmin, canManageParts } = useAuth();
+const { isAdmin, canManageParts, hasPermission } = useAuth();
 
 const navGroups = computed(() => {
     const groups = [];
@@ -60,6 +62,16 @@ const navGroups = computed(() => {
             icon: FileInput,
         },
     ];
+
+
+    // Add Locations menu for admin, manager, outgoing
+    if (hasPermission(['admin', 'manager', 'outgoing'])) {
+        inventoryItems.push({
+            title: 'Locations',
+            href: '/locations',
+            icon: MapPin,
+        });
+    }
 
     groups.push({
         label: 'Inventory',

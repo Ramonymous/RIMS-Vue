@@ -12,7 +12,7 @@ export interface Receiving {
         name: string;
     };
     status: 'completed' | 'draft' | 'cancelled';
-    is_gr: boolean;
+    // is_gr removed
     items_count?: number;
     created_at: string;
     issued_at?: string;
@@ -23,9 +23,7 @@ export interface Receiving {
 type ColumnContext = {
     onView: (receiving: Receiving) => void;
     onCancel: (receiving: Receiving) => void;
-    onUpdateGR: (receiving: Receiving) => void;
     canManageReceivings: boolean;
-    canConfirmGR: boolean;
 };
 
 export const createColumns = (
@@ -69,16 +67,7 @@ export const createColumns = (
             );
         },
     },
-    {
-        accessorKey: 'is_gr',
-        header: 'GR Status',
-        cell: ({ row }) => {
-            const isGr = row.getValue('is_gr') as boolean;
-            return h(Badge, { variant: isGr ? 'default' : 'outline' }, () =>
-                isGr ? 'GR Confirmed' : 'Pending',
-            );
-        },
-    },
+    // GR Status column removed
     {
         accessorKey: 'created_at',
         header: 'Created',
@@ -104,7 +93,7 @@ export const createColumns = (
         cell: ({ row }) => {
             const receiving = row.original;
             const canEdit =
-                !receiving.is_gr && receiving.status !== 'cancelled';
+                receiving.status !== 'completed' && receiving.status !== 'cancelled';
 
             return h('div', { class: 'flex gap-2' }, [
                 h(
@@ -127,17 +116,7 @@ export const createColumns = (
                           () => h(XCircle, { class: 'h-4 w-4' }),
                       )
                     : null,
-                context.canConfirmGR
-                    ? h(
-                          Button,
-                          {
-                              variant: 'outline',
-                              size: 'sm',
-                              onClick: () => context.onUpdateGR(receiving),
-                          },
-                          () => h(CheckCircle, { class: 'h-4 w-4' }),
-                      )
-                    : null,
+                // GR button removed
             ]);
         },
     },

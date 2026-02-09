@@ -154,15 +154,14 @@ return new class extends Migration
 
                 $table->enum('status', ['draft', 'completed', 'cancelled'])->default('draft');
                 $table->text('notes')->nullable();
-                $table->boolean('is_gr')->default(false);
+                // is_gr removed
 
                 $table->timestamps();
                 $table->softDeletes();
 
                 $table->index('doc_number');
                 $table->index('status');
-                $table->index('is_gr');
-                $table->index(['status', 'is_gr']);
+                // is_gr indexes removed
                 $table->index('received_at');
                 $table->index('created_at');
 
@@ -213,15 +212,14 @@ return new class extends Migration
                 $table->enum('status', ['draft', 'completed', 'cancelled'])->default('draft');
 
                 $table->text('notes')->nullable();
-                $table->boolean('is_gi')->default(false);
+                // is_gi removed
 
                 $table->timestamps();
                 $table->softDeletes();
 
                 $table->index('doc_number');
                 $table->index('status');
-                $table->index('is_gi');
-                $table->index(['status', 'is_gi']);
+                // is_gi indexes removed
                 $table->index('issued_at');
                 $table->index('created_at');
             });

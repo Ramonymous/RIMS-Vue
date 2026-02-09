@@ -13,7 +13,7 @@ export interface Outgoing {
         name: string;
     };
     status: 'completed' | 'draft' | 'cancelled';
-    is_gi: boolean;
+    // is_gi removed
     items: any[];
     created_at: string;
     issued_at: string;
@@ -22,13 +22,11 @@ export interface Outgoing {
 type ColumnContext = {
     onView: (outgoing: Outgoing) => void;
     onCancel: (outgoing: Outgoing) => void;
-    onUpdateGI: (outgoing: Outgoing) => void;
     canManageOutgoings: boolean;
-    canConfirmGI: boolean;
 };
 
 const canEdit = (outgoing: Outgoing) => {
-    return !outgoing.is_gi && outgoing.status !== 'cancelled';
+    return outgoing.status !== 'completed' && outgoing.status !== 'cancelled';
 };
 
 export const createColumns = (
@@ -72,16 +70,7 @@ export const createColumns = (
             );
         },
     },
-    {
-        accessorKey: 'is_gi',
-        header: 'GI Status',
-        cell: ({ row }) => {
-            const isGi = row.getValue('is_gi') as boolean;
-            return h(Badge, { variant: isGi ? 'default' : 'outline' }, () =>
-                isGi ? 'GI Confirmed' : 'Pending',
-            );
-        },
-    },
+    // GI Status column removed
     {
         accessorKey: 'created_at',
         header: 'Created',
@@ -136,17 +125,6 @@ export const createColumns = (
                                       () => h(Pencil, { class: 'h-4 w-4' }),
                                   ),
                           },
-                      )
-                    : null,
-                context.canConfirmGI
-                    ? h(
-                          Button,
-                          {
-                              variant: 'outline',
-                              size: 'sm',
-                              onClick: () => context.onUpdateGI(outgoing),
-                          },
-                          () => h(CheckCircle, { class: 'h-4 w-4' }),
                       )
                     : null,
                 context.canManageOutgoings && outgoing.status !== 'cancelled'

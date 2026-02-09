@@ -56,7 +56,7 @@ const userStore = useUserStore();
 
 // Dialogs
 const cancelDialogOpen = ref(false);
-const grDialogOpen = ref(false);
+// grDialogOpen removed
 const viewDialogOpen = ref(false);
 const selectedReceiving = ref<Receiving | null>(null);
 
@@ -71,10 +71,7 @@ const openCancelDialog = (receiving: Receiving) => {
     cancelDialogOpen.value = true;
 };
 
-const openGrDialog = (receiving: Receiving) => {
-    selectedReceiving.value = receiving;
-    grDialogOpen.value = true;
-};
+// openGrDialog removed
 
 const cancelReceiving = () => {
     if (!selectedReceiving.value) return;
@@ -91,28 +88,15 @@ const cancelReceiving = () => {
     );
 };
 
-const updateGrStatus = () => {
-    if (!selectedReceiving.value) return;
-
-    router.post(
-        `/receivings/${selectedReceiving.value.id}/gr`,
-        {},
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                grDialogOpen.value = false;
-            },
-        }
-    );
-};
+// updateGrStatus removed
 
 // Create columns with context
 const columns = createColumns({
     onView: openViewDialog,
     onCancel: openCancelDialog,
-    onUpdateGR: openGrDialog,
+    // onUpdateGR removed
     canManageReceivings: userStore.canManageReceivings.value,
-    canConfirmGR: userStore.canConfirmGR.value,
+    // canConfirmGR removed
 });
 
 // Server-side search
@@ -237,24 +221,6 @@ const formatDate = (date: string): string => {
             @update:open="viewDialogOpen = $event"
         />
 
-        <!-- GR Status Dialog -->
-        <Dialog v-model:open="grDialogOpen">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Update GR Status?</DialogTitle>
-                    <DialogDescription>
-                        This will
-                        {{ selectedReceiving?.is_gr ? 'unconfirm' : 'confirm' }} GR for
-                        receiving "{{ selectedReceiving?.doc_number }}".
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" @click="grDialogOpen = false">Close</Button>
-                    <Button @click="updateGrStatus">
-                        {{ selectedReceiving?.is_gr ? 'Unconfirm' : 'Confirm' }} GR
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <!-- GR Status Dialog removed -->
     </AppLayout>
 </template>
