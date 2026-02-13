@@ -219,11 +219,6 @@ class RequestsController extends Controller
                 // Get supplied quantity (default to requested qty if not provided)
                 $suppliedQty = $request->input('qty', $requestItem->qty);
 
-                // Validate quantity
-                if ($suppliedQty > $requestItem->qty) {
-                    throw new \Exception("Supply quantity ({$suppliedQty}) cannot exceed requested quantity ({$requestItem->qty})");
-                }
-
                 // Check if sufficient stock
                 if ($requestItem->part->stock < $suppliedQty) {
                     throw new \Exception("Insufficient stock for {$requestItem->part->part_number}. Available: {$requestItem->part->stock}, Required: {$suppliedQty}");
